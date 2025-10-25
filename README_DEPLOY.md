@@ -13,3 +13,4 @@ docker-compose down && docker-compose up -d
 
 ## .env (exemplo)
 Veja `.env.sample` e ajuste PLUGGY_CLIENT_ID / PLUGGY_CLIENT_SECRET.
+## teste
