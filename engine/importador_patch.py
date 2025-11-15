@@ -1,0 +1,92 @@
+from __future__ import annotations
+import hashlib
+from datetime import datetime
+import pandas as pd
+from sqlalchemy.exc import IntegrityError
+
+from .storage import db, Transaction
+from .normalizar import norm_desc
+
+def to_standard_df(df: pd.DataFrame, account_id: str, source: str) -> pd.DataFrame:
+    """Normaliza o DataFrame antes de inserir:
+    - garante colunas básicas
+    - normaliza descrição
+    - gera hash_uni determinístico
+    - remove linhas lixo (descrição vazia E valor 0)
+    - remove linhas SEM DATA válida (NaT)
+    - remove duplicatas dentro do lote
+    """
+    out = df.copy()
+
+    # Campos mínimos
+    if "description" not in out.columns:
+        out["description"] = ""
+    out["description"] = (
+        out["description"]
+        .fillna("")
+        .astype(str)
+        .str.replace(r"\s+", " ", regex=True)  # remove quebras de linha e múltiplos espaços
+        .str.strip()
+    )
+
+    if "amount" not in out.columns:
+        out["amount"] = 0.0
+    out["amount"] = pd.to_numeric(out["amount"], errors="coerce").fillna(0.0)
+
+    if "currency" not in out.columns:
+        out["currency"] = "BRL"
+    out["currency"] = out["currency"].fillna("BRL").astype(str)
+
+    if "date" not in out.columns:
+        out["date"] = datetime.utcnow().date()
+    out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.date
+
+    # DESCARTA linhas SEM data válida (evita NaT/NaN no INSERT)
+    out = out[~pd.isna(out["date"])]
+
+    # Normalização de descrição
+    out["description_norm"] = out["description"].apply(norm_desc)
+
+    # Hash determinístico por (conta|data|valor|descr_norm)
+    def _mkhash(r):
+        key = f"{account_id}|{r['date']}|{r['amount']:.2f}|{r['description_norm']}"
+        return hashlib.md5(key.encode("utf-8")).hexdigest()[:16]
+    out["hash_uni"] = out.apply(_mkhash, axis=1)
+
+    # Remove lixo de PDF (descrição vazia E valor 0)
+    out = out[~((out["description"] == "") & (out["amount"] == 0.0))]
+
+    # De-dup dentro do próprio lote
+    out = out.drop_duplicates(subset=["hash_uni"])
+
+    # Campos finais esperados pelo modelo Transaction
+    out["account_id"] = account_id
+    out["source"] = source
+    if "external_uid" not in out.columns:
+        out["external_uid"] = None
+    out["status"] = "confirmed"
+
+    cols = ["date","description","description_norm","amount","currency",
+            "account_id","source","external_uid","hash_uni","status"]
+    return out[cols]
+
+def upsert_transactions(df: pd.DataFrame) -> tuple[int, int]:
+    """Insere linha a linha com tratamento de duplicidade.
+    - Em conflito (UNIQUE), faz rollback da operação e conta como 'skipped'
+    - No final, commit único
+    Retorna (created, skipped).
+    """
+    created = skipped = 0
+    if df is None or df.empty:
+        return 0, 0
+
+    for rec in df.to_dict(orient="records"):
+        try:
+            db.session.add(Transaction(**rec))
+            db.session.flush()  # força INSERT agora; se duplicado, cai no except
+            created += 1
+        except IntegrityError:
+            db.session.rollback()  # limpa a transação falhada
+            skipped += 1
+    db.session.commit()
+    return created, skipped

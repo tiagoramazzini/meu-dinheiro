@@ -1,0 +1,78 @@
+from pathlib import Path
+import hashlib
+import re
+import pandas as pd
+from ofxparse import OfxParser
+
+from .storage import db, Transaction, InstallmentGroup
+from .normalizar import norm_desc, parse_date
+from .pdf_parser import parse_pdf
+
+INSTALLMENT_RE = re.compile(r"(parc(?:ela)?\s*(\d+)[/de](\d+))", re.I)
+
+def make_hash(date, amount, desc_norm, account_id):
+    base = f"{date}|{amount:.2f}|{desc_norm}|{account_id}"
+    return hashlib.sha256(base.encode()).hexdigest()[:16]
+
+def detect_and_load(path: Path) -> pd.DataFrame:
+    suf = path.suffix.lower()
+    if suf == '.ofx':
+        with open(path, 'rb') as f:
+            ofx = OfxParser.parse(f)
+        rows = []
+        for acc in ofx.accounts:
+            for tx in acc.statement.transactions:
+                rows.append({'date': tx.date, 'description': tx.memo or tx.payee, 'amount': float(tx.amount), 'currency':'BRL'})
+        return pd.DataFrame(rows)
+    if suf in {'.csv', '.txt'}:
+        return pd.read_csv(path)
+    if suf in {'.xls', '.xlsx'}:
+        return pd.read_excel(path)
+    if suf == '.pdf':
+        return parse_pdf(path)
+    raise ValueError('Formato não suportado')
+
+def to_standard_df(df_raw: pd.DataFrame, account_id: str, source: str) -> pd.DataFrame:
+    df = pd.DataFrame()
+    df['date'] = df_raw['date'].apply(parse_date)
+    df['description'] = df_raw['description'].astype(str)
+    df['description_norm'] = df['description'].apply(norm_desc)
+    df['amount'] = df_raw['amount'].astype(float)
+    df['currency'] = df_raw.get('currency', 'BRL')
+    df['account_id'] = account_id
+    df['source'] = source
+    return df
+
+def get_or_create_group(row, root, total):
+    sig = hashlib.sha1(f"{row['account_id']}|{root}|{abs(row['amount']):.2f}".encode()).hexdigest()[:12]
+    g = db.session.query(InstallmentGroup).filter_by(signature=sig).first()
+    if g:
+        return g
+    from datetime import date
+    g = InstallmentGroup(signature=sig, first_date=row['date'], amount_per_parcel=abs(row['amount']),
+                         account_id=row['account_id'], description_root=norm_desc(root), total_parcels=total,
+                         created_by='import')
+    db.session.add(g)
+    db.session.commit()
+    return g
+
+def upsert_transactions(df: pd.DataFrame):
+    created, skipped = 0, 0
+    for row in df.to_dict('records'):
+        h = make_hash(row['date'], row['amount'], row['description_norm'], row['account_id'])
+        if db.session.query(Transaction).filter_by(hash_uni=h).first():
+            skipped += 1
+            continue
+        tx = Transaction(hash_uni=h, status='confirmed', **row)
+        m = INSTALLMENT_RE.search(row['description'])
+        if m:
+            n, total = int(m.group(2)), int(m.group(3))
+            root = INSTALLMENT_RE.sub('', row['description']).strip()
+            group = get_or_create_group(row, root, total)
+            tx.installment_group_id = group.id
+            tx.installment_n = n
+            tx.installment_total = total
+        db.session.add(tx)
+        created += 1
+    db.session.commit()
+    return created, skipped

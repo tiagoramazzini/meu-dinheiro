@@ -1,0 +1,18 @@
+services:
+  web:
+    container_name: meu-financeiro-dev
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - FIN_DATA_DIR=/app/data
+      - FIN_BACKUP_DIR=/app/backup
+      - FIN_LOCALE=pt_BR
+      - TZ=America/Sao_Paulo
+    volumes:
+      - ../_local_data:/app/data
+      - ../_local_backup:/app/backup
+    restart: unless-stopped

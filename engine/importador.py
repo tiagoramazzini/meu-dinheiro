@@ -1,310 +1,110 @@
 # engine/importador.py
-from __future__ import annotations
-
-import re
-import hashlib
-from datetime import datetime
-from pathlib import Path
-from typing import Optional
-
 import pandas as pd
-from sqlalchemy.exc import IntegrityError
-
-# Dependências opcionais por tipo de arquivo
-try:
-    import pdfplumber
-except Exception:
-    pdfplumber = None
-
-try:
-    from ofxparse import OfxParser
-except Exception:
-    OfxParser = None
-
-from .storage import db, Transaction
-from .normalizar import norm_desc
-
-# ===================== Helpers / Consts =====================
-_BR_CURRENCY = "BRL"
-
-_RE_DATA_DDMM = re.compile(r"\b(\d{2})/(\d{2})\b")                      # 26/09
-_RE_DATA_DDMMYYYY = re.compile(r"\b(\d{2})/(\d{2})/(\d{4})\b")          # 26/09/2025
-_RE_VALOR_FIM = re.compile(r"(-?\d{1,3}(?:\.\d{3})*,\d{2})\s*$")        # 1.090,86 (no fim)
-_RE_TOKEN_PARC = re.compile(r"\b(\d{1,2})/(\d{1,2})\b")                 # 03/12 etc.
-
-_DROP_PREFIXES_PDF = (
-    "BANCO SANTANDER", "Olá,", "Opções de Pagamento", "Resumo da Fatura", "Histórico de Faturas",
-    "Posição do seu Limite", "Orientações para Pagamento", "Beneficiário", "Beneficiária",
-    "Agência", "Autenticação", "Ficha de Compensação", "Pagamento Mínimo", "Total desta Fatura",
-    "Valor Pago", "CPF/CNPJ", "Programa AAdvantage", "Juros e Custo Efetivo Total",
-    "Central de Atendimento", "SAC", "Ouvidoria", "Melhor Data", "Vencimento", "Total a Pagar",
-    "Escaneie para", "Número do Documento", "Nosso Número", "Data Documento", "Data Process",
-    "Carteira", "Espécie", "Uso Banco", "CET", "Parcelamento de Fatura", "Veja outras opções",
-    "PARCELAMENTO DE FATURA",
-)
-_KEEP_SECTIONS = ("Detalhamento da Fatura", "Despesas", "Parcelamentos")
+from pathlib import Path
+from sqlalchemy import select
+from engine.storage import db, Transaction, Statement
+from engine.pdf_parser import parse_pdf
 
 
-def _parse_brl(txt: str) -> float:
-    s = (txt or "").strip().replace(".", "").replace(",", ".")
-    try:
-        return float(s)
-    except Exception:
-        return 0.0
-
-
-def _parse_date_ddmm(line: str, year_hint: int) -> Optional[datetime.date]:
-    m = _RE_DATA_DDMM.search(line or "")
-    if not m:
-        return None
-    dd, mm = m.group(1), m.group(2)
-    try:
-        return datetime.strptime(f"{dd}/{mm}/{year_hint}", "%d/%m/%Y").date()
-    except Exception:
-        return None
-
-
-def _should_drop_pdf_line(line: str) -> bool:
-    t = (line or "").strip()
-    if not t:
-        return True
-    # Números de página tipo 2/3
-    if re.fullmatch(r"\d+/\d+", t):
-        return True
-    if t.upper().startswith("VALOR TOTAL"):
-        return True
-    for p in _DROP_PREFIXES_PDF:
-        if t.startswith(p):
-            return True
-    return False
-
-
-# ===================== Detect & Load =====================
-def detect_and_load(path: Path | str) -> pd.DataFrame:
-    """
-    Retorna DataFrame com colunas mínimas:
-      - date, description, amount, currency
-      - (opcional: external_uid)
-    """
-    p = Path(path)
-    ext = p.suffix.lower()
-
-    # OFX
-    if ext == ".ofx":
-        if OfxParser is None:
-            raise RuntimeError("ofxparse não está instalado dentro do container.")
-        with open(p, "rb") as fh:
-            ofx = OfxParser.parse(fh)
-        rows = []
-        for acct in ofx.accounts or []:
-            stmt = getattr(acct, "statement", None)
-            txs = getattr(stmt, "transactions", None)
-            for tx in (txs or []):
-                dt = tx.date.date() if isinstance(tx.date, datetime) else tx.date
-                rows.append({
-                    "date": dt,
-                    "description": (tx.memo or tx.payee or "").strip(),
-                    "amount": float(tx.amount or 0.0),
-                    "currency": _BR_CURRENCY,
-                    "external_uid": getattr(tx, "id", None) or getattr(tx, "uniqueid", None),
-                })
-        return pd.DataFrame(rows)
-
-    # CSV
-    if ext in (".csv",):
-        try:
-            return pd.read_csv(p)
-        except Exception:
-            return pd.read_csv(p, encoding="latin1")
-
-    # Excel
-    if ext in (".xls", ".xlsx"):
-        return pd.read_excel(p)
-
-    # PDF (Santander-like)
+def detect_and_load(path: str) -> pd.DataFrame:
+    ext = Path(path).suffix.lower()
+    if ext in [".xlsx", ".xls"]:
+        return pd.read_excel(path, sheet_name=0)
+    if ext == ".csv":
+        return pd.read_csv(path)
     if ext == ".pdf":
-        if pdfplumber is None:
-            raise RuntimeError("pdfplumber não está instalado dentro do container.")
-        return _parse_pdf_fatura_santander_like(p)
-
-    raise ValueError(f"Extensão de arquivo não suportada: {ext}")
-
-
-def _parse_pdf_fatura_santander_like(p: Path) -> pd.DataFrame:
-    """
-    Parser simples para faturas no estilo Santander (Way/AAdvantage).
-    Extrai linhas com: <data DD/MM> ... <descrição> ... <valor no fim>.
-    """
-    rows = []
-    year_hint = None
-    current_section = None
-
-    with pdfplumber.open(str(p)) as pdf:
-        # tenta extrair ano explícito nas primeiras páginas (dd/mm/YYYY)
-        for page in pdf.pages[:3]:
-            text = page.extract_text() or ""
-            m = _RE_DATA_DDMMYYYY.search(text)
-            if m:
-                year_hint = int(m.group(3))
-                break
-        if not year_hint:
-            year_hint = datetime.now().year
-
-        for page in pdf.pages:
-            text = page.extract_text() or ""
-            for raw in text.splitlines():
-                # normaliza espaços/quebras
-                line = " ".join((raw or "").split())
-                if _should_drop_pdf_line(line):
-                    continue
-
-                # ativa seção de detalhe
-                if any(h in line for h in _KEEP_SECTIONS):
-                    current_section = "DETAIL"
-                    continue
-                if current_section != "DETAIL":
-                    continue
-
-                mval = _RE_VALOR_FIM.search(line)
-                if not mval:
-                    continue
-                valor_txt = mval.group(1)
-                amount = _parse_brl(valor_txt)
-
-                d = _parse_date_ddmm(line, year_hint)
-                if not d:
-                    continue
-
-                desc = line[: mval.start()].strip()
-                desc = _RE_DATA_DDMM.sub("", desc).strip()
-
-                # parcela "03/12"
-                mparc = _RE_TOKEN_PARC.search(desc)
-                if mparc:
-                    # guardamos mas não usamos aqui; ficam no DF para quem quiser tratar
-                    try:
-                        parc_n = int(mparc.group(1))
-                        parc_total = int(mparc.group(2))
-                    except Exception:
-                        parc_n = parc_total = None
-                    desc = _RE_TOKEN_PARC.sub("", desc).strip()
-                else:
-                    parc_n = parc_total = None
-
-                # pagamentos (crédito)
-                if "PAGAMENTO DE FATURA" in desc.upper():
-                    amount = -abs(amount)
-
-                rows.append({
-                    "date": d,
-                    "description": desc,
-                    "amount": amount,
-                    "currency": _BR_CURRENCY,
-                    "parcela_n": parc_n,
-                    "parcela_total": parc_total,
-                })
-
-    return pd.DataFrame(rows)
+        return parse_pdf(Path(path))
+    if ext == ".ofx":
+        # opcional: implementar OFX no futuro
+        raise ValueError("OFX ainda não suportado neste parser.")
+    raise ValueError(f"Formato não suportado: {ext}")
 
 
-# ===================== Normalização & Upsert =====================
-def to_standard_df(df: pd.DataFrame, account_id: str, source: str) -> pd.DataFrame:
-    """
-    Normaliza antes de inserir:
-    - garante colunas básicas
-    - normaliza descrição
-    - gera hash_uni por (account|date|amount|description_norm)
-    - remove linhas lixo (descrição vazia E valor 0)
-    - remove linhas SEM data válida (NaT)
-    - dedup dentro do lote
-    """
-    # início seguro (evita "truth value of a DataFrame is ambiguous")
-    if df is None:
-        out = pd.DataFrame()
-    elif isinstance(df, pd.DataFrame):
-        out = df.copy()
-    else:
-        out = pd.DataFrame(df)
-
-    # description
-    if "description" not in out.columns:
-        out["description"] = ""
-    out["description"] = (
-        out["description"]
-        .fillna("")
-        .astype(str)
-        .str.replace(r"\s+", " ", regex=True)  # remove quebras de linha / múltiplos espaços
-        .str.strip()
-    )
-
-    # amount
-    if "amount" not in out.columns:
-        out["amount"] = 0.0
-    out["amount"] = pd.to_numeric(out["amount"], errors="coerce").fillna(0.0)
-
-    # currency
-    if "currency" not in out.columns:
-        out["currency"] = _BR_CURRENCY
-    out["currency"] = out["currency"].fillna(_BR_CURRENCY).astype(str)
-
-    # date
-    if "date" not in out.columns:
-        out["date"] = datetime.utcnow().date()
-    out["date"] = pd.to_datetime(out["date"], errors="coerce").dt.date
-
-    # descarta SEM data válida
-    out = out[~pd.isna(out["date"])]
-
-    # normaliza descrição
-    out["description_norm"] = out["description"].apply(norm_desc)
-
-    # hash determinístico
-    def _mkhash(r):
-        key = f"{account_id}|{r['date']}|{r['amount']:.2f}|{r['description_norm']}"
-        return hashlib.md5(key.encode("utf-8")).hexdigest()[:16]
-    out["hash_uni"] = out.apply(_mkhash, axis=1)
-
-    # remove lixo de PDF: descrição vazia E 0.0
-    out = out[~((out["description"] == "") & (out["amount"] == 0.0))]
-
-    # dedup no lote
-    out = out.drop_duplicates(subset=["hash_uni"])
-
-    # campos finais esperados
-    out["account_id"] = account_id
-    out["source"] = source
-    if "external_uid" not in out.columns:
-        out["external_uid"] = None
-    out["status"] = "confirmed"
-
-    cols = [
-        "date", "description", "description_norm", "amount", "currency",
-        "account_id", "source", "external_uid", "hash_uni", "status"
-    ]
-    if out.empty:
-        return pd.DataFrame(columns=cols)
-    return out[cols]
+def is_aadvantage_xlsx(df: pd.DataFrame) -> bool:
+    cols = {c.strip().lower() for c in df.columns}
+    return {"data", "descrição", "valor (r$)"} <= cols
 
 
-def upsert_transactions(df: pd.DataFrame) -> tuple[int, int]:
-    """
-    Insere linha a linha com tratamento de duplicidade.
-    - Em conflito (UNIQUE), faz rollback e conta como 'skipped'
-    - Commit no final
-    Retorna (created, skipped)
-    """
-    created = skipped = 0
-    if df is None or df.empty:
-        return 0, 0
+def parse_aadvantage_xlsx(path: str, account_id: str) -> pd.DataFrame:
+    df = pd.read_excel(path, sheet_name=0)
+    df.columns = [c.strip() for c in df.columns]
+    df = df.rename(columns={"Data": "date", "Descrição": "description", "Valor (R$)": "amount"})
+    df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+    df["description"] = df["description"].astype(str).str.strip()
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce").fillna(0.0)
+    out = pd.DataFrame({
+        "date": df["date"],
+        "description": df["description"],
+        "amount": df["amount"],
+        "account_id": account_id,
+        "source_name": Path(path).name
+    })
+    return out.dropna(subset=["date"]).query("description != ''")
 
-    for rec in df.to_dict(orient="records"):
-        try:
-            db.session.add(Transaction(**rec))
-            db.session.flush()  # força INSERT agora; se duplicado, cai no except
-            created += 1
-        except IntegrityError:
-            db.session.rollback()
+
+def to_standard_df(df_raw: pd.DataFrame, account_id: str, ext: str, path: str = None, origin_hint: str | None = None) -> pd.DataFrame:
+    if is_aadvantage_xlsx(df_raw):
+        return parse_aadvantage_xlsx(path, account_id)
+    # fallback genérico
+    df = df_raw.copy()
+    cols = {c.lower(): c for c in df.columns}
+    date_col = cols.get("date") or cols.get("data")
+    desc_col = cols.get("description") or cols.get("descrição") or cols.get("descricao")
+    amt_col = cols.get("amount") or cols.get("valor") or cols.get("valor (r$)")
+    if not (date_col and desc_col and amt_col):
+        raise ValueError("Não foi possível mapear colunas padrão (date/description/amount).")
+    df["date"] = pd.to_datetime(df[date_col], errors="coerce").dt.date
+    df["description"] = df[desc_col].astype(str).str.strip()
+    df["amount"] = pd.to_numeric(df[amt_col], errors="coerce").fillna(0.0)
+    out = pd.DataFrame({
+        "date": df["date"],
+        "description": df["description"],
+        "amount": df["amount"],
+        "account_id": account_id,
+        "source_name": Path(path).name if path else "upload"
+    })
+    return out.dropna(subset=["date"]).query("description != ''")
+
+
+def upsert_transactions(df_std, statement_id=None, origin_label=None, period_yyyymm=None):
+    created, skipped = 0, 0
+    for _, r in df_std.iterrows():
+        q = select(Transaction).where(
+            Transaction.date == r["date"],
+            Transaction.amount == float(r["amount"]),
+            Transaction.description == r["description"],
+            Transaction.account_id == r["account_id"]
+        )
+        if db.session.execute(q).first():
             skipped += 1
-
-    db.session.commit()
+            continue
+        tx = Transaction(
+            date=r["date"],
+            description=r["description"],
+            amount=float(r["amount"]),
+            account_id=r["account_id"],
+            statement_id=statement_id,
+            origin_label=origin_label,  # aqui virá a CONTA (ex.: "AAdvantage CC")
+            period_yyyymm=period_yyyymm
+        )
+        db.session.add(tx)
+        created += 1
+    db.commit()
     return created, skipped
+
+
+def import_file_as_statement(path, account_id, df_std, origin_label: str, period_yyyymm: int, period_label: str):
+    stmnt = Statement(
+        source_name=Path(path).name,
+        account_id=account_id,
+        origin_label=origin_label,  # igual à conta
+        period_yyyymm=period_yyyymm,
+        period_label=period_label,
+        rows=0,
+    )
+    db.session.add(stmnt)
+    db.commit()
+    created, skipped = upsert_transactions(df_std, statement_id=stmnt.id, origin_label=origin_label, period_yyyymm=period_yyyymm)
+    stmnt.rows = created
+    db.commit()
+    return stmnt.id, created, skipped
