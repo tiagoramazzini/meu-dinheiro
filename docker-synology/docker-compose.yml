@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  finance:
+    container_name: nas-finance
+    image: python:3.11-slim
+    working_dir: /app
+    command: >
+      bash -lc "pip install --no-cache-dir -r requirements.txt &&
+                python -m streamlit run app.py --server.port=8501 --server.address=0.0.0.0"
+    ports:
+      - "8503:8501"                    # acesse http://SEU_NAS:8503
+    environment:
+      - TZ=America/Sao_Paulo
+      - FIN_DATA_DIR=/app/data
+      - FIN_BACKUP_DIR=/app/backup
+    volumes:
+      - /volume1/docker/nas-finance/app:/app:rw
+      - /volume1/docker/nas-finance/data:/app/data:rw
+      - /volume1/docker/nas-finance/backup:/app/backup:rw
+    restart: unless-stopped
