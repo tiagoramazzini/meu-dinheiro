@@ -37,44 +37,31 @@ def _apply_filters(df, year=None, origin=None, period_yyyymm=None):
         out = out[out["period_yyyymm"] == int(period_yyyymm)]
     return out
 
+def _exclude_nulo(df):
+    if df.empty:
+        return df
+    mask = df["category"].fillna("").str.strip().str.lower().eq("nulo")
+    return df.loc[~mask].copy()
+
 def _is_receita_series(cat: pd.Series, origin: pd.Series) -> pd.Series:
-    """
-    Receita só conta quando:
-      - category == 'Receita' (case-insensitive) E
-      - origin_label termina com 'conta' (case-insensitive)
-    Em '... CC' nunca será Receita (positivos são créditos da fatura).
-    """
-    cat_ok = cat.fillna("").str.strip().str.lower().eq("receita")
-    org_ok = origin.fillna("").str.strip().str.lower().str.endswith("conta")
-    return cat_ok & org_ok
+    return cat.fillna("").str.strip().str.lower().eq("receitas")
 
 def totais_consolidados(year=None, origin=None, period_yyyymm=None):
-    """
-    Despesa = soma de TODAS as linhas que NÃO são Receita (inclui créditos positivos de CC abatendo total).
-    Receita = soma apenas das linhas consideradas Receita (regra acima).
-    """
-    df = _apply_filters(_to_df(), year=year, origin=origin, period_yyyymm=period_yyyymm)
+    df = _exclude_nulo(_apply_filters(_to_df(), year=year, origin=origin, period_yyyymm=period_yyyymm))
     if df.empty:
         return 0.0, 0.0
-
     is_receita = _is_receita_series(df["category"], df["origin_label"])
     total_despesas = float(df.loc[~is_receita, "amount"].sum())
     total_receitas = float(df.loc[is_receita,  "amount"].sum())
     return total_despesas, total_receitas
 
 def df_despesas_por_categoria(year=None, excluir_positivas=True, origin=None, period_yyyymm=None):
-    """
-    Agrega por categoria excluindo Receita (regra acima). Soma tudo (neg+pos), assim créditos abatem.
-    Se excluir_positivas=True, mantém só categorias com total < 0.
-    """
-    df = _apply_filters(_to_df(), year=year, origin=origin, period_yyyymm=period_yyyymm)
+    df = _exclude_nulo(_apply_filters(_to_df(), year=year, origin=origin, period_yyyymm=period_yyyymm))
     if df.empty:
         return pd.DataFrame(columns=["Categoria","Total"])
-
     df = df.copy()
     is_receita = _is_receita_series(df["category"], df["origin_label"])
     df = df.loc[~is_receita]
-
     df["Categoria"] = df["category"].fillna("Não classificado")
     agg = (df.groupby("Categoria", as_index=False)["amount"].sum()
              .rename(columns={"amount":"Total"})
@@ -89,11 +76,7 @@ def _label_mes(yyyymm: int) -> str:
     return f"{M_MAP.get(m, '???')}/{str(y)[-2:]}"
 
 def df_categoria_x_mes(year=None, origin=None, period_yyyymm=None):
-    """
-    Pivot Categoria × MesAno (mmm/aa) baseado em period_yyyymm.
-    Exclui Receita (regra acima). Soma tudo (neg+pos).
-    """
-    df = _apply_filters(_to_df(), year=year, origin=origin, period_yyyymm=period_yyyymm)
+    df = _exclude_nulo(_apply_filters(_to_df(), year=year, origin=origin, period_yyyymm=period_yyyymm))
     if df.empty:
         return pd.DataFrame(columns=["Categoria"])
     df = df.copy()
@@ -108,7 +91,6 @@ def df_categoria_x_mes(year=None, origin=None, period_yyyymm=None):
 
     tabela = df.pivot_table(index="Categoria", columns="MesAno", values="amount", aggfunc="sum", fill_value=0.0)
 
-    # ordenação robusta
     if not tabela.empty:
         labels = list(tabela.columns)
         def parse_col(lbl):
@@ -126,13 +108,11 @@ def df_categoria_x_mes(year=None, origin=None, period_yyyymm=None):
             return m, y2, mi
         ord_df = pd.DataFrame([{"col":c,"m":parse_col(c)[0],"y":parse_col(c)[1],"mi":parse_col(c)[2]} for c in labels]).sort_values(["y","mi"])
         tabela = tabela[ord_df["col"].tolist()]
+        tabela = tabela.reindex(tabela.sum(axis=1).sort_values().index)
     return tabela.reset_index()
 
 def df_gastos_por_origem(year=None, period_yyyymm=None):
-    """
-    Soma por origem (conta), excluindo Receita (regra acima). Soma neg+pos.
-    """
-    df = _apply_filters(_to_df(), year=year, period_yyyymm=period_yyyymm)
+    df = _exclude_nulo(_apply_filters(_to_df(), year=year, period_yyyymm=period_yyyymm))
     if df.empty:
         return pd.DataFrame(columns=["Origem","Total"])
     df = df.copy()
@@ -142,3 +122,12 @@ def df_gastos_por_origem(year=None, period_yyyymm=None):
            .rename(columns={"origin_label":"Origem","amount":"Total"})
            .sort_values("Total"))
     return g
+
+def transactions_for_category_month(category: str, period_yyyymm: int) -> pd.DataFrame:
+    df = _exclude_nulo(_apply_filters(_to_df(), period_yyyymm=period_yyyymm))
+    if df.empty:
+        return pd.DataFrame(columns=["date","description","amount","account_id","category"])
+    cat_norm = df["category"].fillna("Não classificado").str.strip()
+    target = (category or "").strip() or "Não classificado"
+    detail = df.loc[cat_norm.eq(target), ["date","description","amount","account_id","category"]].copy()
+    return detail.sort_values("date")

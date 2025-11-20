@@ -10,7 +10,11 @@ import plotly.express as px
 from engine.storage import db, init_db, Transaction, Statement, Category
 from engine.importador import detect_and_load, to_standard_df, import_file_as_statement
 from engine.budgets import (
-    totais_consolidados, df_despesas_por_categoria, df_categoria_x_mes, df_gastos_por_origem
+    totais_consolidados,
+    df_despesas_por_categoria,
+    df_categoria_x_mes,
+    df_gastos_por_origem,
+    transactions_for_category_month,
 )
 from engine.classificador import apply_category_bulk, classify_batch, apply_smart_rules_to_statement
 from engine.utils import save_temp, fmt_brl
@@ -120,8 +124,8 @@ if page == "Meu Dinheiro":
             )
             fig.update_layout(xaxis_title="", yaxis_title="Total (R$)", bargap=0.2)
             st.plotly_chart(fig, use_container_width=True, key="gcat_ano")
-            st.dataframe(gcat.assign(Total_fmt=gcat["Total"].map(fmt_brl)),
-                         use_container_width=True, hide_index=True)
+            gcat_fmt = gcat.assign(Total_fmt=gcat["Total"].map(fmt_brl))
+            st.dataframe(gcat_fmt[["Categoria","Total_fmt"]], use_container_width=True, hide_index=True)
         else:
             st.info("Sem dados para o período.")
 
@@ -129,6 +133,47 @@ if page == "Meu Dinheiro":
         gxmes = df_categoria_x_mes(year=ano_dash)
         if not gxmes.empty:
             st.dataframe(gxmes, use_container_width=True, hide_index=True)
+            cat_opts = gxmes["Categoria"].tolist()
+            mes_opts = [c for c in gxmes.columns if c != "Categoria"]
+            if cat_opts and mes_opts:
+                det_col1, det_col2 = st.columns(2)
+                with det_col1:
+                    det_cat = st.selectbox("Categoria para detalhar", options=cat_opts, key="det_cat_ano")
+                with det_col2:
+                    det_mes = st.selectbox("Mês (coluna)", options=mes_opts, key="det_mes_ano")
+
+                def _label_to_period(label: str) -> int | None:
+                    if not label or "/" not in label:
+                        return None
+                    mes, ano_lbl = label.split("/", 1)
+                    mapa = {"jan":1,"fev":2,"mar":3,"abr":4,"mai":5,"jun":6,"jul":7,"ago":8,"set":9,"out":10,"nov":11,"dez":12}
+                    mi = mapa.get(mes.strip().lower()[:3])
+                    if mi is None:
+                        return None
+                    try:
+                        yi = int(ano_lbl.strip())
+                        if yi < 100:
+                            yi += 2000
+                    except Exception:
+                        yi = ano_dash
+                    return yi * 100 + mi
+
+                periodo_det = _label_to_period(det_mes)
+                if periodo_det:
+                    detail_df = transactions_for_category_month(det_cat, periodo_det)
+                    if detail_df.empty:
+                        st.info("Nenhum lançamento encontrado para a combinação selecionada.")
+                    else:
+                        st.markdown(f"**Lançamentos de {det_cat} em {det_mes.upper()}**")
+                        detail_show = detail_df.copy()
+                        detail_show["Valor"] = detail_show["amount"].map(fmt_brl)
+                        st.dataframe(
+                            detail_show[["date","description","Valor","account_id","category"]],
+                            use_container_width=True,
+                            hide_index=True
+                        )
+                else:
+                    st.warning("Não foi possível interpretar o mês selecionado.")
         else:
             st.info("Sem dados para o período.")
 
@@ -198,6 +243,9 @@ elif page == "Despesas":
         # carrega transações do lote
         q = db.session.query(Transaction).filter(Transaction.statement_id == lote_id).order_by(Transaction.id.desc())
         rows = q.all()
+        lote_stmt = db.session.query(Statement).filter(Statement.id == lote_id).first()
+        lote_period = lote_stmt.period_yyyymm if lote_stmt else None
+        lote_account = lote_stmt.account_id if lote_stmt else None
 
         def _label_mes(yyyymm: int) -> str:
             M_MAP = {1:"jan",2:"fev",3:"mar",4:"abr",5:"mai",6:"jun",7:"jul",8:"ago",9:"set",10:"out",11:"nov",12:"dez"}
@@ -214,6 +262,7 @@ elif page == "Despesas":
             "categoria": r.category,
         } for r in rows]
         df_tx = pd.DataFrame(data)
+        total_lote = float(df_tx["valor"].sum()) if not df_tx.empty else 0.0
 
         # categorias cadastradas
         all_cats = [c.name for c in db.session.query(Category).order_by(Category.name.asc()).all()]
@@ -222,21 +271,21 @@ elif page == "Despesas":
         if is_cc:
             st.info("Lote de **Cartão de Crédito**: valores positivos são **créditos** (nunca Receita). A categoria 'Receita' foi ocultada neste lote.")
 
-        st.caption("Edite a coluna **categoria** (dropdown) e clique em **Aplicar alterações**.")
+        st.caption(f"Total do lote: **{fmt_brl(total_lote, with_symbol=True)}**. Edite a coluna **categoria** (dropdown) e clique em **Aplicar alterações**.")
         df_edit = st.data_editor(
-            df_tx,
-            num_rows="dynamic",
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "id": st.column_config.NumberColumn("id", disabled=True),
-                "mês": st.column_config.TextColumn("mês", disabled=True),
-                "descrição": st.column_config.TextColumn("descrição", disabled=True),
-                "valor": st.column_config.NumberColumn("valor", disabled=True),
-                "conta": st.column_config.TextColumn("conta", disabled=True),
-                "categoria": st.column_config.SelectboxColumn("categoria", options=cats, required=False),
-            }
-        )
+                df_tx,
+                num_rows="dynamic",
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "id": st.column_config.NumberColumn("id", disabled=True),
+                    "mês": st.column_config.TextColumn("mês", disabled=True),
+                    "descrição": st.column_config.TextColumn("descrição", disabled=True),
+                    "valor": st.column_config.NumberColumn("valor", disabled=True),
+                    "conta": st.column_config.TextColumn("conta", disabled=True),
+                    "categoria": st.column_config.SelectboxColumn("categoria", options=cats, required=False),
+                }
+            )
 
         col_e1, col_e2 = st.columns([1,2])
         with col_e1:
@@ -249,6 +298,61 @@ elif page == "Despesas":
         with col_e2:
             csv = df_tx.to_csv(index=False).encode("utf-8")
             st.download_button("Baixar CSV (snapshot)", data=csv, file_name=f"lote_{lote_id}.csv", mime="text/csv")
+
+        with st.expander("Adicionar / editar despesa manual"):
+            # adicionar
+            manual_date = st.date_input("Data da despesa", datetime.today(), key=f"manual_date_{lote_id}")
+            manual_desc = st.text_input("Descrição", key=f"manual_desc_{lote_id}")
+            manual_val = st.number_input("Valor (use negativo para despesas)", value=0.0, step=0.01, format="%.2f", key=f"manual_val_{lote_id}")
+            manual_account = st.text_input("Conta", value=lote_account or lote_origem or "", key=f"manual_account_{lote_id}")
+            cat_options = [""] + cats if cats else [""]
+            manual_cat = st.selectbox("Categoria (opcional)", options=cat_options, key=f"manual_cat_{lote_id}")
+            if st.button("Salvar despesa manual", key=f"manual_btn_{lote_id}"):
+                if not manual_desc.strip():
+                    st.warning("Informe uma descrição.")
+                elif manual_val == 0:
+                    st.warning("O valor não pode ser zero.")
+                else:
+                    new_tx = Transaction(
+                        date=manual_date,
+                        description=manual_desc.strip(),
+                        amount=float(manual_val),
+                        account_id=manual_account.strip() or lote_origem,
+                        category=manual_cat.strip() or None,
+                        statement_id=lote_id,
+                        origin_label=lote_origem,
+                        period_yyyymm=lote_period
+                    )
+                    db.session.add(new_tx)
+                    db.commit()
+                    st.success("Despesa manual adicionada ao lote.")
+                    st.experimental_rerun()
+
+            st.divider()
+            st.subheader("Editar valores existentes")
+            num_edits = st.number_input("Número de linhas para ajustar", min_value=1, max_value=len(df_tx), value=1, key=f"manual_edit_count_{lote_id}")
+            edit_ids = st.multiselect(
+                "Selecione os IDs para alterar o valor (pode escolher múltiplos)",
+                options=df_tx["id"].tolist(),
+                max_selections=num_edits,
+                key=f"manual_edit_ids_{lote_id}"
+            )
+            novo_valor = st.number_input("Novo valor (negativo = despesa, positivo = crédito)", value=0.0, step=0.01, format="%.2f", key=f"manual_edit_val_{lote_id}")
+            if st.button("Aplicar novo valor", key=f"manual_edit_btn_{lote_id}"):
+                if not edit_ids:
+                    st.warning("Selecione ao menos um ID.")
+                elif novo_valor == 0:
+                    st.warning("Informe um valor diferente de zero.")
+                else:
+                    for tx_id in edit_ids:
+                        db.session.execute(
+                            Transaction.__table__.update()
+                            .where(Transaction.id == int(tx_id))
+                            .values(amount=float(novo_valor))
+                        )
+                    db.commit()
+                    st.success(f"Atualizado o valor em {len(edit_ids)} lançamento(s).")
+                    st.experimental_rerun()
 
 # ===== IMPORTAR EXTRATOS =====
 elif page == "Importar Extratos":
@@ -283,12 +387,17 @@ elif page == "Importar Extratos":
             else:
                 total_created, total_skipped, lotes = 0, 0, []
                 total_rules_updates, total_rules_matches, total_rules = 0, 0, 0
+                total_amount_imported = 0.0
 
                 for f in files:
                     tmp = save_temp(f)
                     backup_arquivo_local(tmp, prefix=account or "upload")
-                    df_raw = detect_and_load(tmp)
-                    df_std = to_standard_df(df_raw, account, f.name.split('.')[-1], path=tmp, origin_hint=None)
+                    df_raw = detect_and_load(tmp, original_name=f.name)
+                    df_std = to_standard_df(
+                        df_raw, account, f.name.split('.')[-1], path=tmp,
+                        origin_hint=None, original_name=f.name, period_yyyymm=period_yyyymm
+                    )
+                    total_amount_imported += float(df_std["amount"].sum())
 
                     stmnt_id, created, skipped = import_file_as_statement(
                         tmp, account, df_std,
@@ -309,7 +418,8 @@ elif page == "Importar Extratos":
                 st.success(
                     f"Importação concluída: {total_created} novas linhas (+{total_skipped} duplicadas). "
                     f"Lotes: {', '.join(map(str, lotes))} — {account} {period_label}. "
-                    f"Regras inteligentes: {total_rules_updates} atualizações ({total_rules_matches} matches, {total_rules} regras ativas)."
+                    f"Regras inteligentes: {total_rules_updates} atualizações ({total_rules_matches} matches, {total_rules} regras ativas). "
+                    f"Total importado: {fmt_brl(total_amount_imported)}."
                 )
 
         if classif:

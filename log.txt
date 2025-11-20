@@ -1,0 +1,649 @@
+INFO:Number of pages in "_local_data/tmp/tmp_q4fmgtw.pdf": 4
+DEBUG:PC -00
+DEBUG:TIAGO RAMAZZINI CUNHA
+DEBUG:Resumo da fatura em R$
+DEBUG:R CDOR ELIAS ZARZUR 617
+DEBUG:SANTO AMARO
+DEBUG:Total da fatura anterior
+DEBUG:5.263,5300027059
+DEBUG:04736-001  SAO PAULO - SP
+DEBUG:Pagamento efetuado em 18/07/2025
+DEBUG:- 5.263,53!#%i^"
+DEBUG:S
+DEBUG:Saldo financiado
+DEBUG:0,00
+DEBUG:+
+DEBUG:Postagem: 12/08/2025
+DEBUG:L
+DEBUG:Lançamentos atuais
+DEBUG:5.542,49
+DEBUG:Vencimento: 18/08/2025
+DEBUG:=
+DEBUG:Total desta fatura
+INFO:Invoice total identified: 5542.49
+DEBUG:5.542,49
+DEBUG:Emissão: 11/08/2025
+DEBUG:120825
+DEBUG:Previsão prox. Fechamento: 11/09/2025
+DEBUG:Titular
+DEBUG:TIAGO RAMAZZINI CUNHA
+DEBUG:Cartão
+DEBUG:5234.XXXX.XXXX.2958
+DEBUG:MASTERCARD BLACK
+DEBUG:O total da sua fatura é:
+DEBUG:Com vencimento em:
+DEBUG:Limite total de crédito:
+DEBUG:R$ 5.542,49
+DEBUG:18/08/2025
+DEBUG:R$38.820,00
+DEBUG:Preparamos
+DEBUG:outras
+DEBUG:opções
+DEBUG:de
+DEBUG:pagamento
+DEBUG:abaixo
+DEBUG:e
+DEBUG:ao
+DEBUG:final
+DEBUG:da
+DEBUG:fatura,
+DEBUG:válidas
+DEBUG:até
+DEBUG:a
+DEBUG:data
+DEBUG:de
+DEBUG:vencimento:
+DEBUG:Pagamento mínimo:
+DEBUG:Parcelas fixas:
+DEBUG:R$ 583,33
+DEBUG:R$661,40
+DEBUG:+  10x R$ 661,40
+DEBUG:Valor em reais
+DEBUG:% do total financiado
+DEBUG:Valor em reais
+DEBUG:% do total financiado
+DEBUG:Valor total financiado
+DEBUG:R$ 4.959,16
+DEBUG:100,00%
+DEBUG:Valor total financiado
+DEBUG:R$ 5.637,79
+DEBUG:100,00%
+DEBUG:Encargos
+DEBUG:R$ 538,07
+DEBUG:-
+DEBUG:Valor solicitado
+DEBUG:R$ 5.542,49
+DEBUG:98,31 %
+DEBUG:IOF
+DEBUG:R$ 34,69
+DEBUG:-
+DEBUG:IOF
+DEBUG:R$ 95,30
+DEBUG:1,69 %
+DEBUG:Total a pagar
+DEBUG:R$ 6.115,25
+DEBUG:-
+DEBUG:Total a pagar
+DEBUG:R$ 7.275,40
+DEBUG:-
+DEBUG:Juros: 10,85 % am - 250,17 % aa
+DEBUG:CET: 11,48 % am - 275,01 % aa
+DEBUG:Juros: 5,45 % am - 90,72 % aa
+DEBUG:CET: 6,34 % am - 111,26 % aa
+DEBUG:Banco Itaú S.A.   341-7
+DEBUG:34191.75033 89368.942523 50434.570003 3 00000000000000
+DEBUG:recibo do pagador
+DEBUG:Número do Documento
+DEBUG:00403893689/0093227
+DEBUG:Nosso Número
+DEBUG:175/03893689-4
+DEBUG:Nome do Pagador/CPF/CNPJ
+DEBUG:TIAGO RAMAZZINI CUNHA  -  673.904.200-49
+DEBUG:Valor do Documento
+DEBUG:R$ 5.542,49
+DEBUG:Nome do Beneficiário/CPF/CNPJ
+DEBUG:ITAU UNIBANCO HOLDING S.A. - 60.872.504/0001-23
+DEBUG:Vencimento
+DEBUG:18/08/2025
+DEBUG:Endereço do Beneficiário
+DEBUG:PÇA ALFREDO EGYDIO DE S.ARANHA, 100,
+DEBUG:TOS 7  A
+DEBUG:, JABAQUARA - SÃO PAULO - SP
+DEBUG:Autenticação Mecânica
+DEBUG:- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+DEBUG:Banco Itaú S.A.
+DEBUG:341-7
+DEBUG:34191.75033 89368.942523 50434.570003 3 00000000000000
+DEBUG:Local de Pagamento
+DEBUG:Data de Vencimento
+DEBUG:Pague sua fatura em qualquer banco, mesmo após a data de vencimento. Dê preferência para o pagamento até a data de vencimento
+DEBUG:para não gerar encargos e/ou rescisão contratual. Em caso de atraso, os encargos serão cobrados na próxima fatura.
+DEBUG:18/08/2025
+DEBUG:Nome do Beneficiário/ CNPJ/CPF/Endereço
+DEBUG:Agência / Código Beneficiário
+DEBUG:ITAU UNIBANCO HOLDING S.A. - 60.872.504/0001-23
+DEBUG:PÇA ALFREDO EGYDIO DE S.ARANHA, 100,
+DEBUG:TOS 7  A
+DEBUG:, JABAQUARA - SÃO PAULO - SP
+DEBUG:2525/04345-7
+DEBUG:Data do Documento
+DEBUG:Número do Documento
+DEBUG:Espécie DOC.
+DEBUG:Aceite
+DEBUG:Data do Processamento
+DEBUG:Nosso Número
+DEBUG:18/08/2025
+DEBUG:00403893689/0093227
+DEBUG:FT
+DEBUG:N
+DEBUG:11/08/2025
+DEBUG:175/03893689-4
+DEBUG:Uso do Banco
+DEBUG:Carteira
+DEBUG:Espécie
+DEBUG:Quantidade
+DEBUG:Valor
+DEBUG:(=) Valor do Documento
+DEBUG:5/0
+DEBUG:R$
+DEBUG:R$ 5.542,49
+DEBUG:Instruções de responsabilidade do beneficiário.
+DEBUG:(-) Descontos / Abatimentos
+DEBUG:Indique o valor que deseja pagar no campo "Valor Pago". Dê preferência ao pagamento total. Não sendo possível, você terá as seguintes
+DEBUG:opções: (i) pagar quantia a partir do valor constante em  Pagamento Mínimo , financiando o restante pelo crédito rotativo; (ii) optar por
+DEBUG:(+) Juros / Multa
+DEBUG:uma das opções de  Parcelas Fixas , pagando o valor exato da parcela até a data do vencimento. O não pagamento poderá gerar
+DEBUG:inscrição nos órgãos restritivos de crédito.
+DEBUG:(=) Valor Pago
+DEBUG:Nome do Pagador/CPF/CNPJ/Endereço/Cidade/UF/CEP
+DEBUG:TIAGO RAMAZZINI CUNHA  -  673.904.200-49
+DEBUG:R CDOR ELIAS ZARZUR 617 - SANTO AMARO - 04736-001  SAO PAULO - SP -
+DEBUG:Sacador Avalista:
+DEBUG:<wwNnNwNnNwwwNNnnnWWnnnWWnnnWWnnnWWnnnWWnnnWWnNnwwNNnNwwNNwwnwNnWnwWNnnwNnWnnNwnWwNwnNwnWNnNNwnwNnWnwnnNWwnnWWn>
+DEBUG:Autenticação Mecânica - Ficha de Compensação
+DEBUG:do valor total é sempre a melhor opção porque não há cobranças de juros.
+DEBUG:O pagamento obrigatório é composto pelo saldo do crédito rotativo e respectivos encargos incidentes no período (R$ 32,31), prestações referentes a
+DEBUG:parcelamentos do saldo devedor de períodos anteriores (R$ 0,00) e valor mínimo de novas transações (R$ 551,02). Para entender mais sobre o
+DEBUG:pagamento obrigatório e o pagamento mínimo, acesse seu contrato e a aba "Serviços" no site Itaú Cartões.
+DEBUG:Consulte outras opções de parcelamento no final da sua fatura.
+DEBUG:Previsão do próximo fechamento:  11/09/2025.
+DEBUG:Lançamentos: compras e saques
+DEBUG:Lançamentos: produtos e serviços
+DEBUG:TIAGO RAMAZZINI (final 9984)
+DEBUG:15/07
+DEBUG:starting register
+DEBUG:DEBITO AUTOM 3492300000
+DEBUG:complementing register
+DEBUG:3.240,45
+DEBUG:closing register
+DEBUG:category attemp 1: DATA
+DEBUG:category attemp 2: ESTABELECIMENTO
+DEBUG:category attemp 3: VALOR EM R$
+DEBUG:category attemp 4: 20/01
+DEBUG:category attemp 5: AMAZON PRIME BR   07/12
+DEBUG:category attemp 6: 13,90
+DEBUG:DATA
+DEBUG:ESTABELECIMENTO
+DEBUG:VALOR EM R$
+DEBUG:20/01
+DEBUG:starting register
+DEBUG:AMAZON PRIME BR   07/12
+DEBUG:complementing register
+DEBUG:13,90
+DEBUG:closing register
+DEBUG:category attemp 1: 16/07
+DEBUG:category attemp 2: IOF PAGAMENTOCONTA AUT
+DEBUG:category attemp 3: 21,48
+DEBUG:category attemp 4: DIVERSOS .SAO PAULO
+DEBUG:16/07
+DEBUG:starting register
+DEBUG:IOF PAGAMENTOCONTA AUT
+DEBUG:complementing register
+DEBUG:21,48
+DEBUG:closing register
+DEBUG:category attemp 1: DIVERSOS .SAO PAULO
+DEBUG:DIVERSOS .SAO PAULO
+DEBUG:0,66 % do total financiado
+DEBUG:13/03
+DEBUG:starting register
+DEBUG:HTM*Plano Bull -  04/12
+DEBUG:complementing register
+DEBUG:21,90
+DEBUG:closing register
+DEBUG:category attemp 1: 21/07
+DEBUG:category attemp 2: PCAUT ENERGIA 24989914
+DEBUG:category attemp 3: 817,02
+DEBUG:category attemp 4: DIVERSOS .Sao Paulo
+DEBUG:21/07
+DEBUG:starting register
+DEBUG:PCAUT ENERGIA 24989914
+DEBUG:complementing register
+DEBUG:817,02
+DEBUG:closing register
+DEBUG:category attemp 1: DIVERSOS .Sao Paulo
+DEBUG:DIVERSOS .Sao Paulo
+DEBUG:11/07
+DEBUG:starting register
+DEBUG:APPLE.COM/BILL
+DEBUG:complementing register
+DEBUG:54,90
+DEBUG:closing register
+DEBUG:category attemp 1: 21/07
+DEBUG:category attemp 2: PCAUT AGUA 0060215810
+DEBUG:category attemp 3: 437,98
+DEBUG:category attemp 4: HOBBY .SAO PAULO
+DEBUG:21/07
+DEBUG:starting register
+DEBUG:PCAUT AGUA 0060215810
+DEBUG:complementing register
+DEBUG:437,98
+DEBUG:closing register
+DEBUG:category attemp 1: HOBBY .SAO PAULO
+DEBUG:HOBBY .SAO PAULO
+DEBUG:21/07
+DEBUG:starting register
+DEBUG:CONTA VIVO
+DEBUG:complementing register
+DEBUG:107,00
+DEBUG:closing register
+DEBUG:category attemp 1: 21/07
+DEBUG:category attemp 2: PCAUT TELEFONE 97682972
+DEBUG:category attemp 3: 349,02
+DEBUG:category attemp 4: DIVERSOS .SAO PAULO
+DEBUG:21/07
+DEBUG:starting register
+DEBUG:PCAUT TELEFONE 97682972
+DEBUG:complementing register
+DEBUG:349,02
+DEBUG:closing register
+DEBUG:category attemp 1: DIVERSOS .SAO PAULO
+DEBUG:DIVERSOS .SAO PAULO
+DEBUG:22/07
+DEBUG:starting register
+DEBUG:EC     *EC*MELIMAIS
+DEBUG:complementing register
+DEBUG:24,90
+DEBUG:closing register
+DEBUG:category attemp 1: 22/07
+DEBUG:category attemp 2: IOF PAGAMENTOCONTA AUT
+DEBUG:category attemp 3: 5,01
+DEBUG:category attemp 4: DIVERSOS .OSASCO
+DEBUG:22/07
+DEBUG:starting register
+DEBUG:IOF PAGAMENTOCONTA AUT
+DEBUG:complementing register
+DEBUG:5,01
+DEBUG:closing register
+DEBUG:category attemp 1: DIVERSOS .OSASCO
+DEBUG:DIVERSOS .OSASCO
+DEBUG:0,61 % do total financiado
+DEBUG:24/07
+DEBUG:starting register
+DEBUG:APPLE.COM/BILL
+DEBUG:complementing register
+DEBUG:21,90
+DEBUG:closing register
+DEBUG:category attemp 1: 22/07
+DEBUG:category attemp 2: IOF PAGAMENTOCONTA AUT
+DEBUG:category attemp 3: 2,68
+DEBUG:category attemp 4: HOBBY .SAO PAULO
+DEBUG:22/07
+DEBUG:starting register
+DEBUG:IOF PAGAMENTOCONTA AUT
+DEBUG:complementing register
+DEBUG:2,68
+DEBUG:closing register
+DEBUG:category attemp 1: HOBBY .SAO PAULO
+DEBUG:HOBBY .SAO PAULO
+DEBUG:0,61 % do total financiado
+DEBUG:30/07
+DEBUG:starting register
+DEBUG:APPLE.COM/BILL
+DEBUG:complementing register
+DEBUG:5,90
+DEBUG:closing register
+DEBUG:category attemp 1: 22/07
+DEBUG:category attemp 2: IOF PAGAMENTOCONTA AUT
+DEBUG:category attemp 3: 2,14
+DEBUG:category attemp 4: HOBBY .SAO PAULO
+DEBUG:22/07
+DEBUG:starting register
+DEBUG:IOF PAGAMENTOCONTA AUT
+DEBUG:complementing register
+DEBUG:2,14
+DEBUG:closing register
+DEBUG:category attemp 1: HOBBY .SAO PAULO
+DEBUG:HOBBY .SAO PAULO
+DEBUG:0,61 % do total financiado
+DEBUG:01/08
+DEBUG:starting register
+DEBUG:APPLE.COM/BILL
+DEBUG:complementing register
+DEBUG:99,90
+DEBUG:closing register
+DEBUG:category attemp 1: 28/07
+DEBUG:category attemp 2: PCAUT ENERGIA 29588740
+DEBUG:category attemp 3: 180,71
+DEBUG:category attemp 4: HOBBY .SAO PAULO
+DEBUG:28/07
+DEBUG:starting register
+DEBUG:PCAUT ENERGIA 29588740
+DEBUG:complementing register
+DEBUG:180,71
+DEBUG:closing register
+DEBUG:category attemp 1: HOBBY .SAO PAULO
+DEBUG:HOBBY .SAO PAULO
+DEBUG:09/08
+DEBUG:starting register
+DEBUG:APPLE.COM/BILL
+DEBUG:complementing register
+DEBUG:19,90
+DEBUG:closing register
+DEBUG:category attemp 1: 29/07
+DEBUG:category attemp 2: IOF PAGAMENTOCONTA AUT
+DEBUG:category attemp 3: 1,00
+DEBUG:category attemp 4: HOBBY .SAO PAULO
+DEBUG:29/07
+DEBUG:starting register
+DEBUG:IOF PAGAMENTOCONTA AUT
+DEBUG:complementing register
+DEBUG:1,00
+DEBUG:closing register
+DEBUG:category attemp 1: HOBBY .SAO PAULO
+DEBUG:HOBBY .SAO PAULO
+DEBUG:0,55 % do total financiado
+DEBUG:09/08
+DEBUG:starting register
+DEBUG:APPLE.COM/BILL
+DEBUG:complementing register
+DEBUG:94,90
+DEBUG:closing register
+DEBUG:category attemp 1: Lançamentos produtos e serviços
+DEBUG:category attemp 2: 5.057,49
+DEBUG:category attemp 3: HOBBY .SAO PAULO
+DEBUG:Lançamentos produtos e serviços
+DEBUG:5.057,49
+DEBUG:HOBBY .SAO PAULO
+DEBUG:Lançamentos no cartão (final 9984)
+DEBUG:465,10
+DEBUG:L
+DEBUG:Total dos lançamentos atuais
+DEBUG:5.542,49
+DEBUG:TIAGO RAMAZZINI CUNHA (final 7301)
+DEBUG:DATA
+DEBUG:ESTABELECIMENTO
+DEBUG:VALOR EM R$
+DEBUG:Compras parceladas - próximas faturas
+DEBUG:25/05
+DEBUG:Vindi  *Investidor03/12
+DEBUG:19,90
+DEBUG:DATA
+DEBUG:ESTABELECIMENTO
+DEBUG:VALOR EM R$
+DEBUG:DIVERSOS .Rio de Janeir
+DEBUG:20/01
+DEBUG:AMAZON PRIME BR   08/12
+DEBUG:13,90
+DEBUG:Lançamentos no cartão (final 7301)
+DEBUG:19,90
+DEBUG:13/03
+DEBUG:HTM*Plano Bull -  05/12
+DEBUG:21,90
+DEBUG:25/05
+DEBUG:Vindi  *Investidor04/12
+DEBUG:19,90
+DEBUG:Lançamentos: produtos e serviços
+DEBUG:DATA
+DEBUG:PRODUTOS/SERVIÇOS
+DEBUG:VALOR EM R$
+DEBUG:Continua...
+DEBUG:3003 3030
+DEBUG:0800 720 3030
+DEBUG:PC - 00 01290 VK045 12/08/2025 VKRPOF01 G4549 0027059
+DEBUG:Próxima fatura
+DEBUG:55,70
+DEBUG:Simulação Saque Cash
+DEBUG:Demais faturas
+DEBUG:368,10
+DEBUG:Total para próximas faturas
+DEBUG:423,80
+DEBUG:Limite de saque
+DEBUG:1.000,00
+DEBUG:Juros
+DEBUG:17,00 % am
+DEBUG:575,45% aa
+DEBUG:CET
+DEBUG:21,23 % am
+DEBUG:940,33% aa
+DEBUG:Limites de crédito
+DEBUG:Valor em R$
+DEBUG:% do total
+DEBUG:Valor em R$
+DEBUG:financiado
+DEBUG:Valor saque
+DEBUG:500,00
+DEBUG:99,38 %
+DEBUG:Limite total de crédito
+DEBUG:38.820,00
+DEBUG:Valor do IOF
+DEBUG:3,14
+DEBUG:0,62 %
+DEBUG:Limite disponível
+DEBUG:32.798,81
+DEBUG:Valor total financiado
+DEBUG:503,14
+DEBUG:100,00%
+DEBUG:Limite total utilizado
+DEBUG:6.021,19
+DEBUG:Valor juros
+DEBUG:85,00
+DEBUG:Desse total, valor utilizado em saques
+DEBUG:5.057,49
+DEBUG:Valor tarifa
+DEBUG:18,00
+DEBUG:Valor total a pagar
+DEBUG:606,14
+DEBUG:Limite máximo para saque no Brasil
+DEBUG:1.000,00
+DEBUG:Limite máximo para saque no exterior
+DEBUG:7.000,00
+DEBUG:Demais Taxas de Juros próximo período
+DEBUG:O limite total de crédito é composto pelos limites de saque.
+DEBUG:Esses são os seus limites na data de fechamento dessa fatura. Caso
+DEBUG:De retirada de recursos país
+DEBUG:10,32 % am
+DEBUG:queira consultar informações atualizadas sobre o seu limite, consulte
+DEBUG:De pagamento de contas
+DEBUG:6,99 % am
+DEBUG:127,51 % aa
+DEBUG:nossos canais.
+DEBUG:Encargos cobrados nesta fatura
+DEBUG:Juros do rotativo
+DEBUG:10,85 %
+DEBUG:0,00
+DEBUG:Juros de mora
+DEBUG:1,00 % am
+DEBUG:0,00
+DEBUG:Multa por atraso
+DEBUG:2,00 %
+DEBUG:0,00
+DEBUG:IOF de financiamento
+DEBUG:(0,38 % + 0,00820 % a.d.)
+DEBUG:0,00
+DEBUG:Fique atento aos encargos para o próximo
+DEBUG:período
+DEBUG:(18/08 a 17/09)
+DEBUG:Juros Máximos do contrato
+DEBUG:10,85 % am
+DEBUG:250,17 % aa
+DEBUG:Novo teto de juros do cartão de crédito
+DEBUG:Valor em R$
+DEBUG:Crédito Rotativo / Atraso
+DEBUG:Limite máximo de juros:
+DEBUG:R$ 0,00
+DEBUG:Juros e encargos financeiros até o momento:
+DEBUG:R$ 0,00
+DEBUG:% sobre o limite máximo de juros:
+DEBUG:0,00 %
+DEBUG:Os juros e encargos que você irá pagar são os apresentados na
+DEBUG:contratação, e caso ultrapassem o limite máximo, a diferença não será
+DEBUG:cobrada ou será devolvida em fatura. Válido por cada operação de
+DEBUG:parcelamento ou rotativo.
+DEBUG:Simulação de Compras parc. c/ juros e
+DEBUG:Crediário (próximo período)
+DEBUG:Limite de crédito
+DEBUG:38.820,00
+DEBUG:Juros da compra parcelada
+DEBUG:5,99 % am
+DEBUG:102,95% aa
+DEBUG:CET da compra parcelada
+DEBUG:6,32 % am
+DEBUG:110,71 % aa
+DEBUG:% do total
+DEBUG:Valor em R$
+DEBUG:financiado
+DEBUG:Valor compra
+DEBUG:500,00
+DEBUG:97,02 %
+DEBUG:Valor do IOF
+DEBUG:15,34
+DEBUG:2,98 %
+DEBUG:Valor total financiado
+DEBUG:515,34
+DEBUG:100,00%
+DEBUG:Valor juros
+DEBUG:477,06
+DEBUG:Quantidade de parcelas
+DEBUG:24
+DEBUG:Valor da parcela
+DEBUG:41,35
+DEBUG:Valor total a pagar
+DEBUG:992,40
+DEBUG:O
+DEBUG:valor
+DEBUG:do
+DEBUG:IOF
+DEBUG:compõe
+DEBUG:o
+DEBUG:valor
+DEBUG:financiado
+DEBUG:e
+DEBUG:será
+DEBUG:incluído
+DEBUG:nas
+DEBUG:parcelas.
+DEBUG:Ao
+DEBUG:contratar
+DEBUG:esse
+DEBUG:produto,
+DEBUG:você
+DEBUG:declara
+DEBUG:que
+DEBUG:o
+DEBUG:pagamento
+DEBUG:dos
+DEBUG:valores
+DEBUG:devidos
+DEBUG:não
+DEBUG:compromete
+DEBUG:sua
+DEBUG:renda
+DEBUG:mínima
+DEBUG:existencial.
+DEBUG:,
+DEBUG:Pague sua fatura com a opção de parcelamento que melhor cabe no seu bolso!
+DEBUG:Oferta válida até o dia do vencimento da sua fatura. Sua taxa de juros de parcelamento é de 5,45% a.m. e 90,72% a.a.
+DEBUG:Novidade:
+DEBUG:você também pode contar com uma das opções com seguro e garantir a
+DEBUG:quitação total ou parcial do saldo devedor
+DEBUG:do parcelamento em caso de desemprego involuntário, incapacidade total, morte ou invalidez permanente total.
+DEBUG:4 x de
+DEBUG:6 x de
+DEBUG:8 x de
+DEBUG:Com seguro
+DEBUG:R$ 1.566,07
+DEBUG:R$ 1.127,48
+DEBUG:R$ 911,11
+DEBUG:Valor total financiado
+DEBUG:R$ 5.785,31 |100%
+DEBUG:R$ 5.933,87 |100%
+DEBUG:R$ 6.079,28 |100%
+DEBUG:Valor solicitado
+DEBUG:R$ 5.542,49 |95,80 %
+DEBUG:R$ 5.542,49 |93,40 %
+DEBUG:R$ 5.542,49 |91,17 %
+DEBUG:Seguro
+DEBUG:R$ 199,24 |3,44 %
+DEBUG:R$ 331,35 |5,58 %
+DEBUG:R$ 459,12 |7,55 %
+DEBUG:IOF
+DEBUG:R$ 43,58
+DEBUG:|0,75 %
+DEBUG:R$ 60,03
+DEBUG:|1,01 %
+DEBUG:R$ 77,67
+DEBUG:|1,28 %
+DEBUG:CET
+DEBUG:9,39 % a.m. - 198,01 % a.a.
+DEBUG:9,22 % a.m. - 192,42 % a.a.
+DEBUG:9,17 % a.m. - 190,80 % a.a.
+DEBUG:Total a pagar
+DEBUG:R$ 6.264,28
+DEBUG:R$ 6.764,88
+DEBUG:R$ 7.288,88
+DEBUG:4 x de
+DEBUG:6 x de
+DEBUG:8 x de
+DEBUG:Sem seguro
+DEBUG:R$ 1.511,72
+DEBUG:R$ 1.063,88
+DEBUG:R$ 841,40
+DEBUG:Valor total financiado
+DEBUG:R$ 5.584,56 |100%
+DEBUG:R$ 5.599,14 |100%
+DEBUG:R$ 5.614,21 |100%
+DEBUG:Valor solicitado
+DEBUG:R$ 5.542,49 |99,25 %
+DEBUG:R$ 5.542,49 |98,99 %
+DEBUG:R$ 5.542,49 |98,72 %
+DEBUG:IOF
+DEBUG:R$ 42,07
+DEBUG:|0,75 %
+DEBUG:R$ 56,65
+DEBUG:|1,01 %
+DEBUG:R$ 71,72
+DEBUG:|1,28 %
+DEBUG:CET
+DEBUG:6,67 % a.m. - 119,37 % a.a.
+DEBUG:6,46 % a.m. - 114,17 % a.a.
+DEBUG:6,38 % a.m. - 112,22 % a.a.
+DEBUG:Total a pagar
+DEBUG:R$ 6.046,88
+DEBUG:R$ 6.383,28
+DEBUG:R$ 6.731,20
+DEBUG:Para contratar,
+DEBUG:pague o valor exato
+DEBUG:da parcela escolhida até o vencimento da fatura. Utilize o mesmo código de barras da fatura para
+DEBUG:efetuar o pagamento. Se preferir, simule outras opções no nosso app Itaú ou na Central de Atendimento.
+DEBUG:Importante:
+DEBUG:caso a sua fatura esteja em débito automático em uma instituição financeira diferente do Itaú, é necessário realizar o
+DEBUG:cancelamento desse serviço antes de contratar o Parcelamento de Fatura.
+DEBUG:Opções com seguro:
+DEBUG:garantia de Perda Involuntária de Emprego (carência de 30 dias e franquia de 30 dias para registrados CLT há mais
+DEBUG:de 12 meses contínuos, com o mesmo empregador); incapacidade total e temporária (carência de 30 dias e franquia de 15 dias - este
+DEBUG:seguro é destinado a autônomos, com comprovação de recolhimento de contribuição por mais de 12 meses contínuos).
+DEBUG:Processo SUSEP n  15414.626445/2019-48. Seguradora: Itaú Seguros S.A., CNPJ: 61.557.039/0001-07. Estipulante: Itaú Unibanco Holding, CNPJ: 60.872.504/0001-23. Corretora: Itaú
+DEBUG:Corretora de Seguros S.A., CNPJ: 43.644.285/0001-06 - Registro SUSEP 20.203503-3. Este material possui breve descrição do produto. Para mais informações, consulte as Condições Gerais
+DEBUG:no site do cartão. A aceitação da proposta estará sujeita a análise do risco. O registro do produto é automático e não representa aprovação ou recomendação por parte da SUSEP. O segurado
+DEBUG:poderá consultar a situação cadastral do seu corretor de seguros no site: www.susep.gov.br , por meio do número do seu registro na SUSEP, nome completo, CNPJ ou CPF. Este seguro é por
+DEBUG:prazo determinado, pelo período do parcelamento de fatura contratado, tendo a seguradora a faculdade  de não renovar a apólice na data de vencimento, sem devolução dos prêmios pagos
+DEBUG:nos termos da apólice.
+DEBUG:O Parcelamento da Fatura tem incidência de encargos (juros e IOF) e inclui o valor total da fatura no momento da contratação. Outros valores como novas compras e parcelas a vencer, serão
+DEBUG:cobradas normalmente nas faturas seguintes. A contratação do parcelamento COM seguro é opcional e o valor do seguro será financiado utilizando a mesma taxa de juros, e será
+DEBUG:efetivada/formalizada com o pagamento da primeira parcela. O valor total do parcelamento comprometerá seu limite de crédito, que será recomposto à medida que as parcelas forem pagas.
+DEBUG:A simulação de qualquer opção em um de nossos outros canais, invalida as opções desta fatura.
+DEBUG:PC - 00 01290 VK045 12/08/2025 VKRPOF01 G4549 0027059
+DEBUG:[['tmp_q4fmgtw.pdf', '15/07', 'DEBITO AUTOM 3492300000', '', '', '', '', 3240.45], ['tmp_q4fmgtw.pdf', '20/01', 'AMAZON PRIME BR   07/12', '07', '12', 'DIVERSOS', 'SAO PAULO', 13.9], ['tmp_q4fmgtw.pdf', '16/07', 'IOF PAGAMENTOCONTA AUT', '', '', 'DIVERSOS', 'SAO PAULO', 21.48], ['tmp_q4fmgtw.pdf', '13/03', 'HTM*Plano Bull -  04/12', '04', '12', 'DIVERSOS', 'Sao Paulo', 21.9], ['tmp_q4fmgtw.pdf', '21/07', 'PCAUT ENERGIA 24989914', '', '', 'DIVERSOS', 'Sao Paulo', 817.02], ['tmp_q4fmgtw.pdf', '11/07', 'APPLE.COM/BILL', '', '', 'HOBBY', 'SAO PAULO', 54.9], ['tmp_q4fmgtw.pdf', '21/07', 'PCAUT AGUA 0060215810', '', '', 'HOBBY', 'SAO PAULO', 437.98], ['tmp_q4fmgtw.pdf', '21/07', 'CONTA VIVO', '', '', 'DIVERSOS', 'SAO PAULO', 107.0], ['tmp_q4fmgtw.pdf', '21/07', 'PCAUT TELEFONE 97682972', '', '', 'DIVERSOS', 'SAO PAULO', 349.02], ['tmp_q4fmgtw.pdf', '22/07', 'EC     *EC*MELIMAIS', '', '', 'DIVERSOS', 'OSASCO', 24.9], ['tmp_q4fmgtw.pdf', '22/07', 'IOF PAGAMENTOCONTA AUT', '', '', 'DIVERSOS', 'OSASCO', 5.01], ['tmp_q4fmgtw.pdf', '24/07', 'APPLE.COM/BILL', '', '', 'HOBBY', 'SAO PAULO', 21.9], ['tmp_q4fmgtw.pdf', '22/07', 'IOF PAGAMENTOCONTA AUT', '', '', 'HOBBY', 'SAO PAULO', 2.68], ['tmp_q4fmgtw.pdf', '30/07', 'APPLE.COM/BILL', '', '', 'HOBBY', 'SAO PAULO', 5.9], ['tmp_q4fmgtw.pdf', '22/07', 'IOF PAGAMENTOCONTA AUT', '', '', 'HOBBY', 'SAO PAULO', 2.14], ['tmp_q4fmgtw.pdf', '01/08', 'APPLE.COM/BILL', '', '', 'HOBBY', 'SAO PAULO', 99.9], ['tmp_q4fmgtw.pdf', '28/07', 'PCAUT ENERGIA 29588740', '', '', 'HOBBY', 'SAO PAULO', 180.71], ['tmp_q4fmgtw.pdf', '09/08', 'APPLE.COM/BILL', '', '', 'HOBBY', 'SAO PAULO', 19.9], ['tmp_q4fmgtw.pdf', '29/07', 'IOF PAGAMENTOCONTA AUT', '', '', 'HOBBY', 'SAO PAULO', 1.0], ['tmp_q4fmgtw.pdf', '09/08', 'APPLE.COM/BILL', '', '', 'HOBBY', 'SAO PAULO', 94.9]]
+INFO:total of registers 20
+INFO:total of money 5522.589999999998
+ERROR:Total mismatch: invoice 5542.49 vs summed 5522.59 (diff +19.90)

@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Código da aplicação
 COPY app.py /app/app.py
 COPY engine /app/engine
+COPY python /app/python
 
 # Pastas de dados/backup
 RUN mkdir -p /app/data/tmp /app/backup

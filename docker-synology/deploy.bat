@@ -21,6 +21,9 @@ copy /Y "%REPO_ROOT%\requirements.txt" "%NAS_ROOT%\app\requirements.txt"
 echo Copiando pasta engine...
 robocopy "%REPO_ROOT%\engine" "%NAS_ROOT%\app\engine" /E /XD "__pycache__" ".git"
 
+echo Copiando pasta python...
+robocopy "%REPO_ROOT%\python" "%NAS_ROOT%\app\python" /E /XD "__pycache__" ".git"
+
 echo Pronto. Para subir no NAS, conecte via SSH e rode:
 echo    cd /volume1/docker/nas-finance
 echo    docker compose up --build -d
