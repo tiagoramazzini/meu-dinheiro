@@ -18,6 +18,7 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Código da aplicação
+COPY VERSION /app/VERSION
 COPY app.py /app/app.py
 COPY engine /app/engine
 COPY python /app/python

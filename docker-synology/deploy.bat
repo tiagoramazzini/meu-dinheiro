@@ -11,12 +11,16 @@ mkdir "%NAS_ROOT%\app" 2>nul
 mkdir "%NAS_ROOT%\data" 2>nul
 mkdir "%NAS_ROOT%\backup" 2>nul
 
+echo Atualizando versao...
+python "%REPO_ROOT%\scripts\bump_version.py"
+
 echo Copiando docker-compose.yml...
 copy /Y "%SCRIPT_DIR%docker-compose.yml" "%NAS_ROOT%\docker-compose.yml"
 
 echo Copiando arquivos da aplicacao...
 copy /Y "%REPO_ROOT%\app.py" "%NAS_ROOT%\app\app.py"
 copy /Y "%REPO_ROOT%\requirements.txt" "%NAS_ROOT%\app\requirements.txt"
+copy /Y "%REPO_ROOT%\VERSION" "%NAS_ROOT%\app\VERSION"
 
 echo Copiando pasta engine...
 robocopy "%REPO_ROOT%\engine" "%NAS_ROOT%\app\engine" /E /XD "__pycache__" ".git"

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Meu Dinheiro - Mockup</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f6f7fb;
+      color: #1f2a37;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 260px;
+      background: #111c2e;
+      color: #fff;
+      padding: 32px 24px;
+    }
+    .sidebar h1 {
+      font-size: 20px;
+      margin-bottom: 28px;
+    }
+    .menu a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #d4dae7;
+      text-decoration: none;
+      margin-bottom: 6px;
+    }
+    .menu a.active {
+      background: #2b3d60;
+      color: #fff;
+      font-weight: 600;
+    }
+    .filters {
+      margin-top: 32px;
+    }
+    .filters label {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #93a4bd;
+    }
+    .filters input, .filters select {
+      width: 100%;
+      margin: 6px 0 16px 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+    }
+    .content {
+      margin-left: 260px;
+      padding: 32px 48px;
+    }
+    .breadcrumb {
+      font-size: 14px;
+      color: #7a8ca8;
+      margin-bottom: 12px;
+    }
+    h2 {
+      margin-top: 0;
+      font-size: 26px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .card {
+      padding: 20px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    }
+    .card span {
+      font-size: 12px;
+      color: #7c8ca4;
+    }
+    .card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 24px;
+    }
+    .panel {
+      background: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+      margin-bottom: 24px;
+    }
+    .panel h3 {
+      margin-top: 0;
+    }
+    .flex {
+      display: flex;
+      gap: 24px;
+    }
+    .flex > .panel {
+      flex: 1;
+    }
+    .detail-panel {
+      margin-top: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    table th, table td {
+      padding: 10px;
+      border-bottom: 1px solid #edf1f7;
+      text-align: left;
+    }
+    .tabs {
+      display: inline-flex;
+      background: #e5eaf3;
+      border-radius: 999px;
+      padding: 4px;
+    }
+    .tabs button {
+      background: transparent;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #6b7791;
+    }
+    .tabs button.active {
+      background: #fff;
+      color: #0f172a;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>Meu Dinheiro</h1>
+    <div class="menu">
+      <a class="active" href="#">Meu Dinheiro</a>
+      <a href="#">Despesas</a>
+      <a href="#">Categorias</a>
+      <a href="#">Importar Extratos</a>
+    </div>
+    <div class="filters">
+      <label>Ano</label>
+      <select><option>2025</option></select>
+      <label>Conta</label>
+      <select>
+        <option>Todas</option>
+        <option>XP CC</option>
+        <option>Personnalite conta</option>
+      </select>
+      <label>Período</label>
+      <input type="text" value="jan-set/25">
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="breadcrumb">Home / Meu Dinheiro</div>
+    <h2>Visão Geral</h2>
+
+    <div class="tabs">
+      <button class="active">Visão Anual</button>
+      <button>Visão Mensal</button>
+    </div>
+
+    <section class="cards">
+      <div class="card">
+        <span>Despesas</span>
+        <strong>R$ -15.234</strong>
+      </div>
+      <div class="card">
+        <span>Receitas</span>
+        <strong>R$ 12.890</strong>
+      </div>
+      <div class="card">
+        <span>Saldo</span>
+        <strong>R$ -2.344</strong>
+      </div>
+      <div class="card">
+        <span>Mês atual</span>
+        <strong>R$ -1.220</strong>
+      </div>
+    </section>
+
+    <div class="flex">
+      <div class="panel">
+        <h3>Gastos por Categoria</h3>
+        <p>[gráfico de barras negativo]</p>
+      </div>
+      <div class="panel">
+        <h3>Gastos por Origem</h3>
+        <p>[gráfico menor]</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Categoria × Mês</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>jan</th>
+            <th>fev</th>
+            <th>mar</th>
+            <th>...</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Assinaturas</td>
+            <td>-500</td>
+            <td>-480</td>
+            <td>-520</td>
+            <td>...</td>
+          </tr>
+          <tr>
+            <td>Saúde</td>
+            <td>-1.200</td>
+            <td>-900</td>
+            <td>-1.050</td>
+            <td>...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="detail-panel">
+        <label>Detalhar</label>
+        <div class="flex">
+          <select>
+            <option>Assinaturas</option>
+            <option>Saúde</option>
+          </select>
+          <select>
+            <option>set/25</option>
+            <option>ago/25</option>
+          </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>01/09</td>
+              <td>Spotify</td>
+              <td>-R$ 34,90</td>
+            </tr>
+            <tr>
+              <td>15/09</td>
+              <td>Adobe</td>
+              <td>-R$ 90,00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

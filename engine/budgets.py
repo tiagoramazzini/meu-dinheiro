@@ -111,8 +111,8 @@ def df_categoria_x_mes(year=None, origin=None, period_yyyymm=None):
         tabela = tabela.reindex(tabela.sum(axis=1).sort_values().index)
     return tabela.reset_index()
 
-def df_gastos_por_origem(year=None, period_yyyymm=None):
-    df = _exclude_nulo(_apply_filters(_to_df(), year=year, period_yyyymm=period_yyyymm))
+def df_gastos_por_origem(year=None, period_yyyymm=None, origin=None):
+    df = _exclude_nulo(_apply_filters(_to_df(), year=year, period_yyyymm=period_yyyymm, origin=origin))
     if df.empty:
         return pd.DataFrame(columns=["Origem","Total"])
     df = df.copy()
@@ -123,8 +123,8 @@ def df_gastos_por_origem(year=None, period_yyyymm=None):
            .sort_values("Total"))
     return g
 
-def transactions_for_category_month(category: str, period_yyyymm: int) -> pd.DataFrame:
-    df = _exclude_nulo(_apply_filters(_to_df(), period_yyyymm=period_yyyymm))
+def transactions_for_category_month(category: str, period_yyyymm: int, origin=None) -> pd.DataFrame:
+    df = _exclude_nulo(_apply_filters(_to_df(), period_yyyymm=period_yyyymm, origin=origin))
     if df.empty:
         return pd.DataFrame(columns=["date","description","amount","account_id","category"])
     cat_norm = df["category"].fillna("Não classificado").str.strip()
