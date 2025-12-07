@@ -28,6 +28,7 @@ class Category(Base):
     name        = Column(String(120), unique=True, nullable=False)
     created_at  = Column(DateTime, default=datetime.utcnow)
     radar       = Column(Integer, default=0)
+    budget_meta = Column(Float, nullable=True)
 
 class Statement(Base):
     __tablename__ = "statements"
@@ -80,6 +81,8 @@ def _ensure_cols():
             cols = [c["name"] for c in insp.get_columns("categories")]
             if "radar" not in cols:
                 con.execute(text("ALTER TABLE categories ADD COLUMN radar INTEGER DEFAULT 0"))
+            if "budget_meta" not in cols:
+                con.execute(text("ALTER TABLE categories ADD COLUMN budget_meta FLOAT"))
         if not insp.has_table("smart_category_rules"):
             SmartCategoryRule.__table__.create(db.engine)
         con.execute(text("CREATE INDEX IF NOT EXISTS ix_transactions_period ON transactions (period_yyyymm)"))

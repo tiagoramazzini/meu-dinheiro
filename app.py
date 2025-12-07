@@ -1,4 +1,4 @@
-# app.py
+﻿# app.py
 # -*- coding: utf-8 -*-
 import os
 import itertools
@@ -8,6 +8,7 @@ from contextlib import contextmanager
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
 from sqlalchemy import select
 
 # ----- ENGINE -----
@@ -56,8 +57,43 @@ def load_version() -> str:
 
 APP_VERSION = load_version()
 
-def card_kpi(label: str, valor: float, col, variant: str = "default"):
-    col.metric(label, fmt_brl(valor, with_symbol=True))
+def card_kpi(label: str, valor: float, col, meta: float | None = None):
+    def _fmt_short(value: float) -> str:
+        try:
+            val = float(value)
+        except Exception:
+            return str(value)
+        sign = "-" if val < 0 else ""
+        val = abs(val)
+        if val >= 1_000_000:
+            return f"{sign}{val/1_000_000:.1f}M"
+        if val >= 1_000:
+            return f"{sign}{val/1_000:.1f}k"
+        return f"{sign}{val:.0f}"
+
+    detail_html = "<div class='kpi-detail kpi-detail--empty'>&nbsp;</div>"
+    if meta is not None:
+        delta = valor - meta
+        is_good = valor >= meta
+        status = "Bom" if is_good else "Atenção"
+        color = "#1b7f5d" if is_good else "#b3261e"
+        detail_html = (
+            f"<div class='kpi-detail' style='color:{color};'>"
+            f"{status} · Meta {_fmt_short(meta)} · Δ {_fmt_short(delta)}"
+            "</div>"
+        )
+    col.markdown(
+        f"""
+        <div class='kpi-card'>
+            <div class='kpi-row'>
+                <div class='kpi-label'>{label}</div>
+                {detail_html}
+            </div>
+            <div class='kpi-value'>{fmt_brl(valor, with_symbol=True)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 _panel_counter = itertools.count()
 
@@ -107,6 +143,29 @@ def list_statements(origin_filter:str="", period_filter:str=""):
             "Linhas": s.rows or 0,
         })
     return pd.DataFrame(rows)
+
+def compute_budget_data(origin_filter: str | None, year: int | None = None):
+    tabela = df_categoria_x_mes(year=year, origin=origin_filter)
+    cols_mes = [c for c in tabela.columns if c != "Categoria"]
+    categorias = db.session.query(Category).order_by(Category.name.asc()).all()
+    rows = []
+    meta_map = {}
+    month_counts = {}
+    for cat in categorias:
+        media = 0.0
+        month_count = len(cols_mes)
+        if not tabela.empty and cols_mes:
+            match = tabela.loc[tabela["Categoria"] == cat.name]
+            if not match.empty:
+                serie = pd.to_numeric(match[cols_mes].iloc[0], errors="coerce").fillna(0.0)
+                valid = [float(v) for v in serie.tolist() if abs(float(v)) > 1e-6]
+                if valid:
+                    month_count = len(valid)
+                    media = float(sum(valid) / len(valid))
+        month_counts[cat.name] = month_count
+        rows.append({"Categoria": cat.name, "Media": media, "Meta": cat.budget_meta, "Meses": month_count})
+        meta_map[cat.name] = cat.budget_meta if cat.budget_meta is not None else media
+    return rows, meta_map, tabela, cols_mes, categorias, month_counts
 
 def format_period_label(yyyymm: int | None) -> str:
     if not yyyymm:
@@ -178,7 +237,7 @@ with st.sidebar:
         default_period_idx = len(period_labels) - 1
         selected_period_label = st.selectbox("Período", period_labels, index=default_period_idx)
         selected_period = dict(zip(period_labels, periodos))[selected_period_label]
-    else:
+    elif st.session_state.md_view == VIEW_MENSAL:
         selected_period_label = "-"
         st.selectbox("Período", ["Sem períodos disponíveis"], index=0, disabled=True)
         selected_period = None
@@ -255,6 +314,16 @@ if page == "Meu Dinheiro":
             .view-toggle div[data-st-key="btn_mensal"] button:hover {
                 background: #ffc48e;
             }
+            .view-toggle div[data-st-key="btn_orcamento"] button {
+                border-radius: 999px;
+                font-weight: 600;
+                background: #ffe3c7;
+                border: 1px solid #ffc493;
+                color: #4a1f0e;
+            }
+            .view-toggle div[data-st-key="btn_orcamento"] button:hover {
+                background: #ffd4a8;
+            }
             .annual-metrics div[data-testid="column"]:nth-child(4) div[data-testid="stMetric"] {
                 background: #ffd6ad;
                 border: 1px solid #ffba75;
@@ -311,29 +380,81 @@ if page == "Meu Dinheiro":
             .view-toggle div[data-st-key="btn_mensal"] button:hover {
                 background: #ffc48e;
             }
+            .alert-badge {
+                display: inline-block;
+                background: #ffe8e5;
+                color: #7d1c0d;
+                font-weight: 600;
+                padding: 4px 12px;
+                border-radius: 999px;
+                border: 1px solid #f5b1a6;
+                margin-bottom: 0.5rem;
+            }
+            .kpi-card {
+                background: #fff6ec;
+                border: 1px solid #ffd3b5;
+                border-radius: 16px;
+                padding: 12px 18px;
+                margin-bottom: 12px;
+                box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+            }
+            .kpi-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 8px;
+            }
+            .kpi-label {
+                font-size: 0.9rem;
+                color: #5c2d1a;
+            }
+            .kpi-value {
+                font-size: 1.6rem;
+                font-weight: 600;
+                color: #2f1509;
+            }
+            .kpi-detail {
+                font-size: 0.85rem;
+                font-weight: 600;
+            }
+            .kpi-detail--empty {
+                visibility: hidden;
+            }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
+    VIEW_ANUAL = "annual"
+    VIEW_MENSAL = "monthly"
+    VIEW_ORCAMENTO = "budget"
+
     if "md_view" not in st.session_state:
-        st.session_state.md_view = "Visão Anual"
+        st.session_state.md_view = VIEW_ANUAL
 
     st.markdown('<div class="view-toggle">', unsafe_allow_html=True)
-    toggle1, toggle2, toggle_info = st.columns([1, 1, 2])
+    toggle1, toggle2, toggle3, toggle_info = st.columns([1, 1, 1, 2])
     with toggle1:
         if st.button("Visão Anual", use_container_width=True, key="btn_anual"):
-            st.session_state.md_view = "Visão Anual"
+            st.session_state.md_view = VIEW_ANUAL
     with toggle2:
         if st.button("Visão Mensal", use_container_width=True, key="btn_mensal"):
-            st.session_state.md_view = "Visão Mensal"
+            st.session_state.md_view = VIEW_MENSAL
+    with toggle3:
+        if st.button("Orçamento", use_container_width=True, key="btn_orcamento"):
+            st.session_state.md_view = VIEW_ORCAMENTO
     with toggle_info:
-        st.caption(f"Visão atual: **{st.session_state.md_view}**")
+        current_label = {
+            VIEW_ANUAL: "Visão Anual",
+            VIEW_MENSAL: "Visão Mensal",
+            VIEW_ORCAMENTO: "Orçamento",
+        }.get(st.session_state.md_view, "Visão Anual")
+        st.caption(f"Visão atual: **{current_label}**")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
 
-    if st.session_state.md_view == "Visão Anual":
+    if st.session_state.md_view == VIEW_ANUAL:
         st.subheader(f"Resumo de {filtro_ano}")
         tot_desp_ano, tot_rec_ano = totais_consolidados(year=filtro_ano, origin=origin_filter)
         periodo_desp, periodo_rec = (
@@ -342,41 +463,94 @@ if page == "Meu Dinheiro":
             (0.0, 0.0)
         )
 
+        _, budget_meta_map_year, _, cols_mes_ano, categorias_ano, annual_month_counts = compute_budget_data(origin_filter, year=filtro_ano)
+        months_total_ano = len(cols_mes_ano) or 0
+        meta_total_ano = 0.0
+        for cat in categorias_ano:
+            monthly_meta = budget_meta_map_year.get(cat.name, 0.0) or 0.0
+            month_count = annual_month_counts.get(cat.name, months_total_ano) or months_total_ano
+            meta_total_ano += monthly_meta * month_count
+
         with st.container():
             st.markdown('<div class="annual-metrics">', unsafe_allow_html=True)
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-            card_kpi("Despesas", tot_desp_ano, kpi1)
+            card_kpi("Despesas", tot_desp_ano, kpi1, meta_total_ano)
             card_kpi("Receitas", tot_rec_ano, kpi2)
             card_kpi("Saldo", tot_rec_ano + tot_desp_ano, kpi3)
             label_periodo = selected_period_label if selected_period else "Período"
-            card_kpi(f"Saldo {label_periodo}", periodo_rec + periodo_desp, kpi4)
+            card_kpi("Saldo (período)", periodo_rec + periodo_desp, kpi4)
             st.markdown('</div>', unsafe_allow_html=True)
+        if meta_total_ano and tot_desp_ano > meta_total_ano * 1.05:
+            excedente = tot_desp_ano - meta_total_ano
+            st.markdown(
+                f"<div class='alert-badge'>Atenção: despesas anuais acima da meta em {fmt_brl(excedente)}</div>",
+                unsafe_allow_html=True,
+            )
 
         col_cat, col_origin = st.columns((2, 1), gap="large")
+        _, annual_meta_map, _, cols_mes_ano, _, annual_month_counts = compute_budget_data(origin_filter, year=filtro_ano)
+        months_total_ano = len(cols_mes_ano) or 0
         with col_cat:
             gcat = df_despesas_por_categoria(
                 year=filtro_ano,
                 origin=origin_filter,
                 excluir_positivas=True,
             )
+            meta_totals = {}
             if not gcat.empty:
-                fig = px.bar(
-                    gcat,
-                    x="Categoria",
-                    y="Total",
-                    color="Categoria",
-                    hover_data={"Total":":.2f"},
+                categories_order = gcat["Categoria"].tolist()
+                palette = px.colors.qualitative.Pastel + px.colors.qualitative.Set2 + px.colors.qualitative.Safe
+                color_map = {
+                    cat: palette[i % len(palette)]
+                    for i, cat in enumerate(categories_order)
+                }
+                meta_totals = {}
+                meta_line = []
+                for cat in categories_order:
+                    monthly_meta = annual_meta_map.get(cat, 0.0) or 0.0
+                    month_count = annual_month_counts.get(cat, months_total_ano) or months_total_ano
+                    meta_total = monthly_meta * month_count
+                    meta_totals[cat] = meta_total
+                    meta_line.append(-abs(meta_total))
+                fig = go.Figure()
+                fig.add_bar(
+                    x=categories_order,
+                    y=gcat["Total"],
+                    name="Despesa",
+                    marker_color=[color_map[c] for c in categories_order],
+                    hovertemplate="%{x}: %{y:.2f}<extra></extra>",
                 )
-                fig.update_layout(xaxis_title="", yaxis_title="Total (R$)", bargap=0.2, showlegend=False, margin=dict(l=10, r=10, t=30, b=0))
+                fig.add_trace(
+                    go.Scatter(
+                        x=categories_order,
+                        y=meta_line,
+                        mode="lines+markers",
+                        name="Meta anual",
+                        line=dict(color="#d95829", dash="dash"),
+                        marker=dict(symbol="circle", size=8),
+                        hovertemplate="Meta %{x}: %{y:.2f}<extra></extra>",
+                    )
+                )
+                fig.update_layout(
+                    xaxis_title="Categoria",
+                    yaxis_title="Total (R$)",
+                    bargap=0.2,
+                    margin=dict(l=10, r=10, t=30, b=0),
+                    legend=dict(orientation="h", y=1.1, x=0),
+                )
                 adjust_negative_axis(fig, gcat["Total"])
                 with panel("Gastos por Categoria"):
                     st.plotly_chart(fig, use_container_width=True, key="gcat_ano")
             else:
                 st.info("Sem dados de categorias para os filtros selecionados.")
         if not gcat.empty:
-            gcat_fmt = gcat.assign(Total_fmt=gcat["Total"].map(fmt_brl))
+            meta_col = gcat["Categoria"].map(lambda c: meta_totals.get(c, 0.0)).fillna(0.0)
+            gcat_fmt = gcat.assign(
+                Meta_fmt=meta_col.map(fmt_brl),
+                Total_fmt=gcat["Total"].map(fmt_brl),
+            )
             st.dataframe(
-                gcat_fmt[["Categoria", "Total_fmt"]],
+                gcat_fmt[["Categoria", "Meta_fmt", "Total_fmt"]],
                 use_container_width=True,
                 hide_index=True,
             )
@@ -397,7 +571,17 @@ if page == "Meu Dinheiro":
                 use_container_width=True,
                 hide_index=True,
             )
-
+            top5 = gcat.nsmallest(5, "Total")
+            if not top5.empty:
+                with panel("Top gastos do ano"):
+                    for idx, row in top5.iterrows():
+                        c1, c2 = st.columns([5, 1])
+                        with c1:
+                            st.markdown(f"**{row['Categoria']}** — {fmt_brl(row['Total'])}")
+                        with c2:
+                            if st.button("Detalhar", key=f"top-ano-{idx}"):
+                                st.session_state["det-cat-ano"] = row["Categoria"]
+                                st.rerun()
         st.divider()
         st.subheader("Despesas por Categoria e por Mês")
 
@@ -448,7 +632,27 @@ if page == "Meu Dinheiro":
             else:
                 st.warning("Não foi possível interpretar o mês selecionado.")
 
-    else:
+        if not tabela.empty:
+            st.markdown("#### Evolução por categoria (últimos 6 meses)")
+            trend_cat = st.selectbox("Categoria", tabela["Categoria"].tolist(), key="trend-cat-ano")
+            cols_mes_trend = [c for c in tabela.columns if c != "Categoria"]
+            if cols_mes_trend:
+                recent_cols = cols_mes_trend[-6:]
+                serie = tabela.loc[tabela["Categoria"] == trend_cat, recent_cols].iloc[0]
+                valores = pd.to_numeric(serie, errors="coerce").fillna(0.0)
+                fig_trend = go.Figure()
+                fig_trend.add_trace(
+                    go.Scatter(
+                        x=recent_cols,
+                        y=valores,
+                        mode="lines+markers",
+                        line=dict(color="#d95829"),
+                    )
+                )
+                fig_trend.update_layout(xaxis_title="", yaxis_title="Total (R$)", margin=dict(l=10, r=10, t=20, b=0))
+                st.plotly_chart(fig_trend, use_container_width=True, key="trend_ano")
+
+    elif st.session_state.md_view == VIEW_MENSAL:
         st.subheader("Resumo Mensal")
         if not selected_period:
             st.info("Nenhum período disponível para exibir.")
@@ -462,10 +666,18 @@ if page == "Meu Dinheiro":
             with st.container():
                 st.markdown('<div class="monthly-metrics">', unsafe_allow_html=True)
                 cA, cB, cC = st.columns(3)
-                card_kpi("Despesas (período)", tot_desp_m, cA)
+                _, budget_meta_map_all, _, _, categorias_meta, _ = compute_budget_data(origin_filter)
+                meta_total_mensal = sum((budget_meta_map_all.get(cat.name, 0.0) or 0.0) for cat in categorias_meta)
+                card_kpi("Despesas (período)", tot_desp_m, cA, meta_total_mensal)
                 card_kpi("Receitas (período)", tot_rec_m, cB)
                 card_kpi("Saldo (período)", tot_rec_m + tot_desp_m, cC)
                 st.markdown('</div>', unsafe_allow_html=True)
+            if meta_total_mensal and tot_desp_m > meta_total_mensal * 1.05:
+                excedente_mes = tot_desp_m - meta_total_mensal
+                st.markdown(
+                    f"<div class='alert-badge'>Atenção: despesas do período acima da meta em {fmt_brl(excedente_mes)}</div>",
+                    unsafe_allow_html=True,
+                )
 
             col_cat_m, col_origin_m = st.columns((2, 1), gap="large")
             with col_cat_m:
@@ -475,25 +687,68 @@ if page == "Meu Dinheiro":
                     excluir_positivas=True,
                 )
                 if not gcat_m.empty:
-                    figm = px.bar(
-                        gcat_m,
-                        x="Categoria",
-                        y="Total",
-                        color="Categoria",
-                        hover_data={"Total":":.2f"},
+                    categories_order = gcat_m["Categoria"].tolist()
+                    meta_line = [
+                        -abs(budget_meta_map_all.get(cat, 0.0) or 0.0)
+                        for cat in categories_order
+                    ]
+                    palette = px.colors.qualitative.Pastel + px.colors.qualitative.Set2 + px.colors.qualitative.Safe
+                    color_map = {
+                        cat: palette[i % len(palette)]
+                        for i, cat in enumerate(categories_order)
+                    }
+                    figm = go.Figure()
+                    figm.add_bar(
+                        x=categories_order,
+                        y=gcat_m["Total"],
+                        name="Despesa",
+                        marker_color=[color_map[c] for c in categories_order],
+                        hovertemplate="%{x}: %{y:.2f}<extra></extra>",
                     )
-                    figm.update_layout(xaxis_title="", yaxis_title="Total (R$)", bargap=0.2, showlegend=False, margin=dict(l=10, r=10, t=30, b=0))
+                    figm.add_trace(
+                        go.Scatter(
+                            x=categories_order,
+                            y=meta_line,
+                            mode="lines+markers",
+                            name="Meta",
+                            line=dict(color="#d95829", dash="dash"),
+                            marker=dict(symbol="circle", size=8),
+                            hovertemplate="Meta %{x}: %{y:.2f}<extra></extra>",
+                        )
+                    )
+                    figm.update_layout(
+                        xaxis_title="Categoria",
+                        yaxis_title="Total (R$)",
+                        bargap=0.2,
+                        margin=dict(l=10, r=10, t=30, b=0),
+                        legend=dict(orientation="h", y=1.1, x=0),
+                    )
                     adjust_negative_axis(figm, gcat_m["Total"])
                     with panel("Gastos por Categoria (período)"):
                         st.plotly_chart(figm, use_container_width=True, key="gcat_mes")
                 else:
                     st.info("Sem dados de categorias no período selecionado.")
             if not gcat_m.empty:
+                meta_series = gcat_m["Categoria"].map(lambda c: budget_meta_map_all.get(c, 0.0)).fillna(0.0)
                 st.dataframe(
-                    gcat_m.assign(Total_fmt=gcat_m["Total"].map(fmt_brl))[["Categoria", "Total_fmt"]],
+                    gcat_m.assign(
+                        Meta_fmt=meta_series.map(lambda v: fmt_brl(v)),
+                        Total_fmt=gcat_m["Total"].map(fmt_brl),
+                    )[["Categoria", "Meta_fmt", "Total_fmt"]],
                     use_container_width=True,
                     hide_index=True,
                 )
+                top5_m = gcat_m.nsmallest(5, "Total")
+                if not top5_m.empty:
+                    with panel("Top gastos do período"):
+                        for idx, row in top5_m.iterrows():
+                            c1, c2 = st.columns([5, 1])
+                            with c1:
+                                st.markdown(f"**{row['Categoria']}** — {fmt_brl(row['Total'])}")
+                            with c2:
+                                if st.button("Detalhar período", key=f"top-mes-{idx}"):
+                                    st.session_state["det-cat-ano"] = row["Categoria"]
+                                    st.rerun()
 
             with col_origin_m:
                 gorig_m = df_gastos_por_origem(period_yyyymm=selected_period, origin=origin_filter)
@@ -508,9 +763,54 @@ if page == "Meu Dinheiro":
             if not gorig_m.empty:
                 st.dataframe(
                     gorig_m.assign(Total_fmt=gorig_m["Total"].map(fmt_brl)),
-                        use_container_width=True,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+    elif st.session_state.md_view == VIEW_ORCAMENTO:
+        st.subheader("Orçamento por Categoria")
+        rows, meta_map, tabela_orc, cols_mes, categorias, _ = compute_budget_data(origin_filter)
+        if not categorias:
+            st.info("Nenhuma categoria cadastrada.")
+        else:
+            total_meta = sum((meta_map.get(cat.name, 0.0) or 0.0) for cat in categorias)
+            col_table, col_card = st.columns((2, 1))
+            with col_table:
+                df_orc = pd.DataFrame(rows).sort_values("Categoria").reset_index(drop=True)
+                if df_orc.empty:
+                    st.info("Sem dados de categorias para exibir.")
+                else:
+                    st.caption("Use a coluna Meta para definir o alvo mensal de cada categoria. Deixe em branco para usar a média calculada.")
+                    editor = st.data_editor(
+                        df_orc,
+                        key="orcamento_editor",
                         hide_index=True,
+                        column_config={
+                            "Categoria": st.column_config.TextColumn("Categoria", disabled=True, width="medium"),
+                            "Media": st.column_config.NumberColumn("Média Mensal (R$)", disabled=True, format="R$ %.2f"),
+                            "Meta": st.column_config.NumberColumn("Meta (R$)", help="Deixe vazio para usar a média."),
+                        },
                     )
+                    if st.button("Salvar metas", key="btn_save_budget"):
+                        try:
+                            name_map = {c.name: c for c in categorias}
+                            for _, row in editor.iterrows():
+                                cat_obj = name_map.get(row["Categoria"])
+                                if not cat_obj:
+                                    continue
+                                meta_val = row.get("Meta")
+                                if pd.isna(meta_val):
+                                    cat_obj.budget_meta = None
+                                else:
+                                    cat_obj.budget_meta = float(meta_val)
+                            db.commit()
+                            st.success("Metas atualizadas.")
+                            st.rerun()
+                        except Exception as exc:
+                            st.error(f"Erro ao salvar metas: {exc}")
+            with col_card:
+                st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
+                card_kpi("Meta Mensal", total_meta, st.container())
 
 # ===== RADAR =====
 elif page == "Radar":
@@ -519,7 +819,10 @@ elif page == "Radar":
     if not radar_cats:
         st.info("Nenhuma categoria marcada como Radar. Marque nas configurações de Categorias.")
     else:
-        tabela_radar = df_categoria_x_mes(year=filtro_ano, origin=origin_filter)
+        rows_radar, budget_meta_map_radar, tabela_radar, _, _, _ = compute_budget_data(origin_filter, year=filtro_ano)
+        if tabela_radar.empty:
+            st.info("Sem dados para o período/conta selecionados.")
+            st.stop()
         if tabela_radar.empty:
             st.info("Sem dados para o período/conta selecionados.")
         else:
@@ -536,7 +839,8 @@ elif page == "Radar":
                     continue
 
                 serie = row[cols_radar].iloc[0]
-                df_plot = pd.DataFrame({"Mês": cols_radar, "Total": serie.values})
+                df_plot = pd.DataFrame({"Mes": cols_radar, "Total": serie.values})
+                mes_col = df_plot.columns[0]
                 color = palette[idx % len(palette)]
 
                 with st.container(border=True, key=f"radar_card_{cat.id}"):
@@ -545,7 +849,7 @@ elif page == "Radar":
                     with col_bar:
                         fig = px.bar(
                             df_plot,
-                            x="Mês",
+                            x=mes_col,
                             y="Total",
                             color_discrete_sequence=[color],
                         )
@@ -557,6 +861,17 @@ elif page == "Radar":
                             margin=dict(l=10, r=10, t=40, b=0),
                         )
                         adjust_negative_axis(fig, df_plot["Total"])
+                        meta_val = -abs(budget_meta_map_radar.get(cat.name, 0.0) or 0.0)
+                        fig.add_trace(
+                            go.Scatter(
+                                x=df_plot[mes_col],
+                                y=[meta_val] * len(df_plot),
+                                mode="lines+markers",
+                                name="Meta",
+                                line=dict(color="#d95829", dash="dash"),
+                                marker=dict(symbol="circle", size=6),
+                            )
+                        )
                         st.plotly_chart(fig, use_container_width=True, key=f"radar_bar_{cat.id}")
 
                     with col_pie:
@@ -812,7 +1127,7 @@ elif page == "Importar Extratos":
             n = db.session.query(Transaction).filter(Transaction.statement_id == int(lote_id)).delete()
             db.session.query(Statement).filter(Statement.id == int(lote_id)).delete()
             db.commit()
-            st.success(f"Excluídos {n} lan��amentos e o lote {int(lote_id)}.")
+            st.success(f"Excluídos {n} lançãoamentos e o lote {int(lote_id)}.")
             df_lotes = list_statements(origem_f, periodo_f)
     st.dataframe(df_lotes, use_container_width=True, hide_index=True)
 
@@ -1008,3 +1323,9 @@ elif page == "Categorias":
                 st.warning("Informe um ID válido.")
 
         st.caption("As regras são aplicadas automaticamente logo após cada importação.")
+
+
+
+
+
+
