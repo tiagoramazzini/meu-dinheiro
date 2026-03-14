@@ -702,16 +702,34 @@ if page == "Meu Dinheiro":
                 cA, cB, cC = st.columns(3)
                 _, budget_meta_map_all, _, _, categorias_meta, _ = compute_budget_data(origin_filter)
                 meta_total_mensal = sum((budget_meta_map_all.get(cat.name, 0.0) or 0.0) for cat in categorias_meta)
-                card_kpi("Despesas (período)", tot_desp_m, cA, meta_total_mensal)
+                if meta_total_mensal:
+                    _no_ritmo_m = abs(tot_desp_m) <= abs(meta_total_mensal)
+                    _status_m = "No ritmo" if _no_ritmo_m else "Acima do ritmo"
+                    _cor_m = "#1b7f5d" if _no_ritmo_m else "#b3261e"
+                    _detalhe_m = (
+                        f"<div class='kpi-detail' style='color:{_cor_m};'>"
+                        f"Meta mensal: {_fmt_short(meta_total_mensal)} · Ritmo: {_status_m}"
+                        "</div>"
+                    )
+                    card_kpi("Despesas (período)", tot_desp_m, cA, detalhe=_detalhe_m)
+                else:
+                    card_kpi("Despesas (período)", tot_desp_m, cA)
                 card_kpi("Receitas (período)", tot_rec_m, cB)
                 card_kpi("Saldo (período)", tot_rec_m + tot_desp_m, cC)
                 st.markdown('</div>', unsafe_allow_html=True)
-            if meta_total_mensal and tot_desp_m > meta_total_mensal * 1.05:
-                excedente_mes = tot_desp_m - meta_total_mensal
-                st.markdown(
-                    f"<div class='alert-badge'>Atenção: despesas do período acima da meta em {fmt_brl(excedente_mes)}</div>",
-                    unsafe_allow_html=True,
-                )
+            if meta_total_mensal:
+                _diferenca_m = abs(abs(tot_desp_m) - abs(meta_total_mensal))
+                if not _no_ritmo_m:
+                    st.markdown(
+                        f"<div class='alert-badge'>Atenção: despesas {fmt_brl(_diferenca_m)} acima da meta mensal "
+                        f"(meta: {fmt_brl(abs(meta_total_mensal))})</div>",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f"<div class='alert-badge-green'>No ritmo: despesas {fmt_brl(_diferenca_m)} abaixo da meta mensal</div>",
+                        unsafe_allow_html=True,
+                    )
 
             col_cat_m, col_origin_m = st.columns((2, 1), gap="large")
             with col_cat_m:
