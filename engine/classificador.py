@@ -3,7 +3,7 @@
 from typing import Any, Dict, Iterable
 import pandas as pd
 from sqlalchemy import select, update
-from engine.storage import db, Transaction, SmartCategoryRule
+from engine.storage import db, Transaction, SmartCategoryRule, RadarKeyword
 
 def apply_category_bulk(rows: Any) -> int:
     if rows is None:
@@ -42,6 +42,29 @@ def classify_batch(*args, **kwargs) -> Dict[str, int]:
         db.session.execute(update(Transaction).where(Transaction.id.in_(ids)).values(category="Não classificado"))
         db.commit()
     return {"classified": len(ids), "skipped": 0, "rules_used": 0}
+
+def apply_radar_rules_to_statement(statement_id: int) -> dict:
+    kws = db.session.query(RadarKeyword).filter(RadarKeyword.active == 1).all()
+    if not kws:
+        return {"updated": 0, "matched": 0, "rules": 0}
+    total_updated, total_matched = 0, 0
+    for kw in kws:
+        label = kw.label if kw.label else kw.keyword
+        ids = [
+            x[0] for x in db.session.query(Transaction.id)
+            .filter(
+                Transaction.statement_id == statement_id,
+                Transaction.description.ilike(f"%{kw.keyword}%")
+            ).all()
+        ]
+        total_matched += len(ids)
+        if ids:
+            db.session.execute(
+                update(Transaction).where(Transaction.id.in_(ids)).values(radar_label=label)
+            )
+            total_updated += len(ids)
+    db.commit()
+    return {"updated": total_updated, "matched": total_matched, "rules": len(kws)}
 
 def apply_smart_rules_to_statement(statement_id: int) -> dict:
     rules = db.session.query(SmartCategoryRule).filter(SmartCategoryRule.active == 1).all()

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 from sqlalchemy import select
-from engine.storage import db, Transaction
+from engine.storage import db, Transaction, Category, RadarKeyword
 
 M_MAP = {1:"jan",2:"fev",3:"mar",4:"abr",5:"mai",6:"jun",7:"jul",8:"ago",9:"set",10:"out",11:"nov",12:"dez"}
 
@@ -15,15 +15,27 @@ def _to_df():
         Transaction.account_id,
         Transaction.category,
         Transaction.origin_label,
-        Transaction.period_yyyymm
+        Transaction.period_yyyymm,
+        Transaction.radar_label,
     )).all()
     if not rows:
         return pd.DataFrame(columns=[
-            "id","date","description","amount","account_id","category","origin_label","period_yyyymm"
+            "id","date","description","amount","account_id","category","origin_label","period_yyyymm","radar_label"
         ])
     return pd.DataFrame(rows, columns=[
-        "id","date","description","amount","account_id","category","origin_label","period_yyyymm"
+        "id","date","description","amount","account_id","category","origin_label","period_yyyymm","radar_label"
     ])
+
+def _sort_month_cols(cols):
+    """Ordena uma lista de rótulos 'jan/25', 'fev/25' cronologicamente."""
+    ordem_map = {"jan":1,"fev":2,"mar":3,"abr":4,"mai":5,"jun":6,"jul":7,"ago":8,"set":9,"out":10,"nov":11,"dez":12}
+    def _key(lbl):
+        s = str(lbl).strip()
+        m, y = s.split("/", 1) if "/" in s else (s, "00")
+        try: y2 = int(str(y)[-2:])
+        except: y2 = -1
+        return (y2, ordem_map.get(m.lower()[:3], 0))
+    return sorted(cols, key=_key)
 
 def _apply_filters(df, year=None, origin=None, period_yyyymm=None):
     if df.empty:
@@ -131,3 +143,39 @@ def transactions_for_category_month(category: str, period_yyyymm: int, origin=No
     target = (category or "").strip() or "Não classificado"
     detail = df.loc[cat_norm.eq(target), ["date","description","amount","account_id","category"]].copy()
     return detail.sort_values("date")
+
+def df_radar_keyword_x_mes(year=None, origin=None):
+    df = _apply_filters(_to_df(), year=year, origin=origin)
+    if df.empty:
+        return pd.DataFrame(columns=["Item"])
+    df = df[df["radar_label"].fillna("").str.strip() != ""].copy()
+    if df.empty:
+        return pd.DataFrame(columns=["Item"])
+    df = df.dropna(subset=["period_yyyymm"])
+    if df.empty:
+        return pd.DataFrame(columns=["Item"])
+    df["MesAno"] = df["period_yyyymm"].astype(int).apply(_label_mes)
+    tabela = df.pivot_table(index="radar_label", columns="MesAno", values="amount", aggfunc="sum", fill_value=0.0)
+    if not tabela.empty:
+        tabela = tabela[_sort_month_cols(tabela.columns.tolist())]
+        tabela = tabela.reindex(tabela.sum(axis=1).sort_values().index)
+    return tabela.reset_index().rename(columns={"radar_label": "Item"})
+
+def df_radar_completo_x_mes(year=None, origin=None):
+    kw_df = df_radar_keyword_x_mes(year=year, origin=origin)
+
+    cat_df = df_categoria_x_mes(year=year, origin=origin)
+    radar_cats = [c.name for c in db.session.query(Category).filter(Category.radar == 1).all()]
+    if not cat_df.empty and radar_cats:
+        cat_df = cat_df[cat_df["Categoria"].isin(radar_cats)].copy()
+        cat_df = cat_df.rename(columns={"Categoria": "Item"})
+        cat_df["Item"] = "Cat: " + cat_df["Item"].astype(str)
+    else:
+        cat_df = pd.DataFrame(columns=["Item"])
+
+    if kw_df.empty and cat_df.empty:
+        return pd.DataFrame(columns=["Item"])
+
+    combined = pd.concat([kw_df, cat_df], ignore_index=True, sort=False).fillna(0.0)
+    month_cols = _sort_month_cols([c for c in combined.columns if c != "Item"])
+    return combined[["Item"] + month_cols].reset_index(drop=True)

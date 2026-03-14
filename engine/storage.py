@@ -21,6 +21,7 @@ class Transaction(Base):
     statement_id  = Column(Integer, nullable=True)
     origin_label  = Column(String(100), nullable=True)
     period_yyyymm = Column(Integer, nullable=True)
+    radar_label   = Column(String(200), nullable=True)
 
 class Category(Base):
     __tablename__ = "categories"
@@ -83,6 +84,8 @@ def _ensure_cols():
                 con.execute(text("ALTER TABLE transactions ADD COLUMN origin_label VARCHAR(100)"))
             if "period_yyyymm" not in cols:
                 con.execute(text("ALTER TABLE transactions ADD COLUMN period_yyyymm INTEGER"))
+            if "radar_label" not in cols:
+                con.execute(text("ALTER TABLE transactions ADD COLUMN radar_label VARCHAR(200)"))
         if not insp.has_table("categories"):
             Category.__table__.create(db.engine)
         else:

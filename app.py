@@ -20,8 +20,9 @@ from engine.budgets import (
     df_categoria_x_mes,
     df_gastos_por_origem,
     transactions_for_category_month,
+    df_radar_completo_x_mes,
 )
-from engine.classificador import apply_category_bulk, classify_batch, apply_smart_rules_to_statement
+from engine.classificador import apply_category_bulk, classify_batch, apply_smart_rules_to_statement, apply_radar_rules_to_statement
 from engine.utils import save_temp, fmt_brl
 
 # ===== BOOTSTRAP =====
@@ -826,94 +827,73 @@ if page == "Meu Dinheiro":
 # ===== RADAR =====
 elif page == "Radar":
     st.header("Radar")
-    radar_cats = db.session.query(Category).filter(Category.radar == 1).order_by(Category.name.asc()).all()
-    if not radar_cats:
-        st.info("Nenhuma categoria marcada como Radar. Marque nas configurações de Categorias.")
+    st.caption("Acompanhamento por keyword e categoria.")
+    if origin_filter:
+        st.caption(f"Conta filtrada: **{selected_origin}**")
+
+    tabela_radar = df_radar_completo_x_mes(year=filtro_ano, origin=origin_filter)
+
+    if tabela_radar.empty:
+        st.info("Sem dados no Radar. Importe transações e configure keywords ou categorias Radar.")
     else:
-        rows_radar, budget_meta_map_radar, tabela_radar, _, _, _ = compute_budget_data(origin_filter, year=filtro_ano)
-        if tabela_radar.empty:
-            st.info("Sem dados para o período/conta selecionados.")
-            st.stop()
-        else:
-            cols_radar = [c for c in tabela_radar.columns if c != "Categoria"]
-            palette = px.colors.qualitative.Pastel + px.colors.qualitative.Set2 + px.colors.qualitative.Safe
-            totals_all = df_despesas_por_categoria(year=filtro_ano, origin=origin_filter, excluir_positivas=True)
-            total_ano = float(totals_all["Total"].sum()) if not totals_all.empty else 0.0
-            for idx, cat in enumerate(radar_cats):
-                row = tabela_radar.loc[tabela_radar["Categoria"] == cat.name]
-                if row.empty:
-                    st.subheader(cat.name)
-                    st.info("Sem despesas registradas para esta categoria.")
-                    st.divider()
-                    continue
+        cols_mes = [c for c in tabela_radar.columns if c != "Item"]
 
-                serie = row[cols_radar].iloc[0]
-                df_plot = pd.DataFrame({"Mes": cols_radar, "Total": serie.values})
-                mes_col = df_plot.columns[0]
-                color = palette[idx % len(palette)]
+        tabela_fmt = tabela_radar.copy()
+        for col in cols_mes:
+            tabela_fmt[col] = tabela_fmt[col].map(fmt_brl)
+        col_cfg = {"Item": st.column_config.TextColumn("Item", width="medium")}
+        for col in cols_mes:
+            col_cfg[col] = st.column_config.TextColumn(col.upper(), width="small")
 
-                with st.container(border=True, key=f"radar_card_{cat.id}"):
-                    st.subheader(cat.name)
-                    col_bar, col_pie = st.columns((2, 1))
-                    with col_bar:
-                        fig = px.bar(
-                            df_plot,
-                            x=mes_col,
-                            y="Total",
-                            color_discrete_sequence=[color],
-                        )
-                        fig.update_layout(
-                            xaxis_title="",
-                            yaxis_title="Total (R$)",
-                            bargap=0.2,
-                            height=320,
-                            showlegend=False,
-                            margin=dict(l=10, r=10, t=40, b=0),
-                        )
-                        adjust_negative_axis(fig, df_plot["Total"])
-                        meta_val = -abs(budget_meta_map_radar.get(cat.name, 0.0) or 0.0)
-                        fig.add_trace(
-                            go.Scatter(
-                                x=df_plot[mes_col],
-                                y=[meta_val] * len(df_plot),
-                                mode="lines+markers",
-                                name="Meta",
-                                line=dict(color="#d95829", dash="dash"),
-                                marker=dict(symbol="circle", size=6),
-                            )
-                        )
-                        st.plotly_chart(fig, use_container_width=True, key=f"radar_bar_{cat.id}")
+        with panel("Evolução do Radar"):
+            st.dataframe(tabela_fmt, use_container_width=True, height=300, hide_index=True, column_config=col_cfg)
 
-                    with col_pie:
-                        cat_total = float(df_plot["Total"].sum())
-                        cat_total_abs = abs(cat_total)
-                        other_total_abs = abs(total_ano) - cat_total_abs
-                        if other_total_abs < 0:
-                            other_total_abs = 0
-                        pie_df = pd.DataFrame({
-                            "Tipo": [cat.name, "Outras despesas"],
-                            "Valor": [cat_total_abs, other_total_abs],
-                        })
-                        fig_pie = px.pie(
-                            pie_df,
-                            names="Tipo",
-                            values="Valor",
-                            color="Tipo",
-                            color_discrete_map={
-                                cat.name: color,
-                                "Outras despesas": "#f2f4f7",
-                            },
-                        )
-                        fig_pie.update_traces(textposition="inside", texttemplate="%{percent:.1%}")
-                        fig_pie.update_layout(
-                            showlegend=True,
-                            height=320,
-                            legend=dict(orientation="h", y=-0.2, x=0.25),
-                            margin=dict(l=0, r=0, t=20, b=40),
-                        )
-                        st.plotly_chart(fig_pie, use_container_width=True, key=f"radar_pie_{cat.id}")
+        st.markdown("#### Detalhar item")
+        itens = tabela_radar["Item"].tolist()
+        item_sel = st.selectbox("Item", itens, key="radar_item_sel")
 
-                st.divider()
+        if item_sel:
+            serie_row = tabela_radar.loc[tabela_radar["Item"] == item_sel]
+            if not serie_row.empty:
+                valores = pd.to_numeric(serie_row[cols_mes].iloc[0], errors="coerce").fillna(0.0)
+                palette = px.colors.qualitative.Pastel + px.colors.qualitative.Set2 + px.colors.qualitative.Safe
+                color = palette[itens.index(item_sel) % len(palette)]
+
+                fig_r = go.Figure()
+                fig_r.add_bar(
+                    x=cols_mes,
+                    y=valores.tolist(),
+                    name=item_sel,
+                    marker_color=color,
+                    hovertemplate="%{x}: %{y:.2f}<extra></extra>",
+                )
+
+                if item_sel.startswith("Cat: "):
+                    cat_name = item_sel[5:]
+                    cat_obj = db.session.query(Category).filter(Category.name == cat_name).first()
+                    if cat_obj and cat_obj.budget_meta:
+                        meta_val = -abs(cat_obj.budget_meta)
+                        fig_r.add_trace(go.Scatter(
+                            x=cols_mes,
+                            y=[meta_val] * len(cols_mes),
+                            mode="lines+markers",
+                            name="Meta",
+                            line=dict(color="#d95829", dash="dash"),
+                            marker=dict(symbol="circle", size=6),
+                        ))
+
+                fig_r.update_layout(
+                    xaxis_title="",
+                    yaxis_title="Total (R$)",
+                    bargap=0.2,
+                    height=320,
+                    margin=dict(l=10, r=10, t=30, b=0),
+                    legend=dict(orientation="h", y=1.1, x=0),
+                )
+                adjust_negative_axis(fig_r, valores)
+
+                with panel(f"Evolução: {item_sel}"):
+                    st.plotly_chart(fig_r, use_container_width=True, key="radar_detalhe_chart")
 
 # ===== DESPESAS (EDIÇÃO POR ARQUIVO) =====
 elif page == "Despesas":
@@ -951,6 +931,7 @@ elif page == "Despesas":
             "valor": r.amount,
             "conta": r.account_id,
             "categoria": r.category,
+            "radar": r.radar_label or "",
         } for r in rows]
         df_tx = pd.DataFrame(data)
         total_lote = float(df_tx["valor"].sum()) if not df_tx.empty else 0.0
@@ -976,6 +957,7 @@ elif page == "Despesas":
                     "valor": st.column_config.NumberColumn("valor", disabled=True),
                     "conta": st.column_config.TextColumn("conta", disabled=True),
                     "categoria": st.column_config.SelectboxColumn("categoria", options=cats, required=False),
+                    "radar": st.column_config.TextColumn("radar"),
                 }
             )
 
@@ -984,9 +966,17 @@ elif page == "Despesas":
             if st.button("Aplicar alterações", type="primary"):
                 try:
                     updated = apply_category_bulk(df_edit[["id","categoria"]])
-                    st.success(f"Categorias atualizadas em {updated} linhas.")
+                    from sqlalchemy import update as _sa_update
+                    for _, r in df_edit.iterrows():
+                        db.session.execute(
+                            _sa_update(Transaction)
+                            .where(Transaction.id == int(r["id"]))
+                            .values(radar_label=(r["radar"].strip() if r["radar"] else None))
+                        )
+                    db.commit()
+                    st.success(f"Categorias e radar atualizados em {updated} linhas.")
                 except Exception as e:
-                    st.error(f"Erro ao aplicar categorias: {e}")
+                    st.error(f"Erro ao aplicar alterações: {e}")
         with col_e2:
             csv = df_tx.to_csv(index=False).encode("utf-8")
             st.download_button("Baixar CSV (snapshot)", data=csv, file_name=f"lote_{lote_id}.csv", mime="text/csv")
@@ -1079,6 +1069,7 @@ elif page == "Importar Extratos":
             else:
                 total_created, total_skipped, lotes = 0, 0, []
                 total_rules_updates, total_rules_matches, total_rules = 0, 0, 0
+                total_radar_updates, total_radar_matches, total_radar_rules = 0, 0, 0
                 total_amount_imported = 0.0
 
                 for f in files:
@@ -1102,6 +1093,11 @@ elif page == "Importar Extratos":
                     total_rules_updates += res.get("updated", 0)
                     total_rules_matches += res.get("matched", 0)
                     total_rules = max(total_rules, res.get("rules", 0))
+                    # aplica radar inteligente automaticamente
+                    res_radar = apply_radar_rules_to_statement(stmnt_id)
+                    total_radar_updates += res_radar.get("updated", 0)
+                    total_radar_matches += res_radar.get("matched", 0)
+                    total_radar_rules = max(total_radar_rules, res_radar.get("rules", 0))
 
                     total_created += created
                     total_skipped += skipped
@@ -1111,6 +1107,7 @@ elif page == "Importar Extratos":
                     f"Importação concluída: {total_created} novas linhas (+{total_skipped} duplicadas). "
                     f"Lotes: {', '.join(map(str, lotes))} — {account} {period_label}. "
                     f"Regras inteligentes: {total_rules_updates} atualizações ({total_rules_matches} matches, {total_rules} regras ativas). "
+                    f"Radar inteligente: {total_radar_updates} marcações ({total_radar_matches} matches, {total_radar_rules} keywords ativas). "
                     f"Total importado: {fmt_brl(total_amount_imported)}."
                 )
 
