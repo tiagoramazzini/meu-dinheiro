@@ -34,9 +34,9 @@ def _run_personnalite_converter(path: str) -> pd.DataFrame:
         res = subprocess.run(cmd, cwd=tmpdir, capture_output=True, text=True)
         if res.returncode != 0:
             raise ValueError(f"Falha ao converter PDF (exit {res.returncode}): {res.stderr or res.stdout}")
-        csv_path = Path(tmpdir) / "ouput.csv"
+        csv_path = Path(tmpdir) / "output.csv"
         if not csv_path.exists():
-            raise ValueError("Conversor Personnalité não gerou ouput.csv.")
+            raise ValueError("Conversor Personnalité não gerou output.csv.")
         return pd.read_csv(csv_path, sep=";")
 
 

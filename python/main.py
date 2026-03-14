@@ -164,13 +164,13 @@ for current_register in registers:
     deduped_registers.append(current_register)
 
 try:
-    with open('ouput.csv', 'w') as f:
+    with open('output.csv', 'w') as f:
         t = [[cell if isinstance(cell, str) else str(cell).replace('.',',') for cell in row] for row in deduped_registers]
         data = sep.join(['filename','date','description','parc','total_parc','category','city','value']) + '\n'
         data += '\n'.join([ sep.join(register) for register in t])
         f.write(data)
 except PermissionError as exc:
-    logging.error(f'Failed to write ouput.csv: {exc}')
+    logging.error(f'Failed to write output.csv: {exc}')
 
 logging.debug(deduped_registers)
 logging.info('total of registers ' + str(len(deduped_registers)))

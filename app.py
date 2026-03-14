@@ -823,8 +823,6 @@ elif page == "Radar":
         if tabela_radar.empty:
             st.info("Sem dados para o período/conta selecionados.")
             st.stop()
-        if tabela_radar.empty:
-            st.info("Sem dados para o período/conta selecionados.")
         else:
             cols_radar = [c for c in tabela_radar.columns if c != "Categoria"]
             palette = px.colors.qualitative.Pastel + px.colors.qualitative.Set2 + px.colors.qualitative.Safe
@@ -1006,7 +1004,7 @@ elif page == "Despesas":
                     db.session.add(new_tx)
                     db.commit()
                     st.success("Despesa manual adicionada ao lote.")
-                    st.experimental_rerun()
+                    st.rerun()
 
             st.divider()
             st.subheader("Editar valores existentes")
@@ -1032,7 +1030,7 @@ elif page == "Despesas":
                         )
                     db.commit()
                     st.success(f"Atualizado o valor em {len(edit_ids)} lançamento(s).")
-                    st.experimental_rerun()
+                    st.rerun()
 
 # ===== IMPORTAR EXTRATOS =====
 elif page == "Importar Extratos":
