@@ -255,6 +255,8 @@ if page == "Meu Dinheiro":
         """
         <style>
             section.main > div.block-container {
+                max-width: 1100px;
+                margin: 0 auto;
                 padding-top: 1rem;
             }
             div[data-testid="stMetricValue"] {
@@ -266,11 +268,11 @@ if page == "Meu Dinheiro":
                 margin-bottom: 16px;
             }
             div[data-testid="stContainer"][data-st-key^="panel_"] > div {
-                background: #fff6ec;
-                border: 1px solid #ffd3b5;
-                border-radius: 16px;
-                padding: 16px 20px;
-                margin-bottom: 18px;
+                background: #fff6ec !important;
+                border: 1px solid #ffd3b5 !important;
+                border-radius: 16px !important;
+                padding: 16px 20px !important;
+                margin-bottom: 18px !important;
             }
             div[data-testid="stMetric"] {
                 background: #fff6ec;
@@ -535,6 +537,7 @@ if page == "Meu Dinheiro":
                     xaxis_title="Categoria",
                     yaxis_title="Total (R$)",
                     bargap=0.2,
+                    height=320,
                     margin=dict(l=10, r=10, t=30, b=0),
                     legend=dict(orientation="h", y=1.1, x=0),
                 )
@@ -552,6 +555,7 @@ if page == "Meu Dinheiro":
             st.dataframe(
                 gcat_fmt[["Categoria", "Meta_fmt", "Total_fmt"]],
                 use_container_width=True,
+                height=300,
                 hide_index=True,
             )
 
@@ -560,7 +564,7 @@ if page == "Meu Dinheiro":
             if not gorig.empty:
                 pie_data = gorig.assign(ValorAbs=gorig["Total"].abs())
                 fig2 = px.pie(pie_data, names="Origem", values="ValorAbs", hole=0.45)
-                fig2.update_layout(showlegend=True, legend=dict(orientation="h", y=-0.15), margin=dict(l=10, r=10, t=30, b=0))
+                fig2.update_layout(showlegend=True, height=320, legend=dict(orientation="h", y=-0.15), margin=dict(l=10, r=10, t=30, b=0))
                 with panel("Gastos por Origem"):
                     st.plotly_chart(fig2, use_container_width=True, key="gorig_ano")
             else:
@@ -569,6 +573,7 @@ if page == "Meu Dinheiro":
             st.dataframe(
                 gorig.assign(Total_fmt=gorig["Total"].map(fmt_brl)),
                 use_container_width=True,
+                height=300,
                 hide_index=True,
             )
             top5 = gcat.nsmallest(5, "Total")
@@ -599,6 +604,7 @@ if page == "Meu Dinheiro":
             st.dataframe(
                 tabela_fmt,
                 use_container_width=True,
+                height=300,
                 hide_index=True,
                 column_config=col_cfg,
             )
@@ -621,6 +627,7 @@ if page == "Meu Dinheiro":
                     st.dataframe(
                         detail_show[["Data", "description", "Valor", "account_id"]],
                         use_container_width=True,
+                        height=300,
                         hide_index=True,
                         column_config={
                             "Data": st.column_config.TextColumn("Data", width="small"),
@@ -649,7 +656,7 @@ if page == "Meu Dinheiro":
                         line=dict(color="#d95829"),
                     )
                 )
-                fig_trend.update_layout(xaxis_title="", yaxis_title="Total (R$)", margin=dict(l=10, r=10, t=20, b=0))
+                fig_trend.update_layout(xaxis_title="", yaxis_title="Total (R$)", height=320, margin=dict(l=10, r=10, t=20, b=0))
                 st.plotly_chart(fig_trend, use_container_width=True, key="trend_ano")
 
     elif st.session_state.md_view == VIEW_MENSAL:
@@ -720,6 +727,7 @@ if page == "Meu Dinheiro":
                         xaxis_title="Categoria",
                         yaxis_title="Total (R$)",
                         bargap=0.2,
+                        height=320,
                         margin=dict(l=10, r=10, t=30, b=0),
                         legend=dict(orientation="h", y=1.1, x=0),
                     )
@@ -736,6 +744,7 @@ if page == "Meu Dinheiro":
                         Total_fmt=gcat_m["Total"].map(fmt_brl),
                     )[["Categoria", "Meta_fmt", "Total_fmt"]],
                     use_container_width=True,
+                    height=300,
                     hide_index=True,
                 )
                 top5_m = gcat_m.nsmallest(5, "Total")
@@ -755,7 +764,7 @@ if page == "Meu Dinheiro":
                 if not gorig_m.empty:
                     pie_data_m = gorig_m.assign(ValorAbs=gorig_m["Total"].abs())
                     figm2 = px.pie(pie_data_m, names="Origem", values="ValorAbs", hole=0.45)
-                    figm2.update_layout(showlegend=True, legend=dict(orientation="h", y=-0.15), margin=dict(l=10, r=10, t=30, b=0))
+                    figm2.update_layout(showlegend=True, height=320, legend=dict(orientation="h", y=-0.15), margin=dict(l=10, r=10, t=30, b=0))
                     with panel("Gastos por Origem (período)"):
                         st.plotly_chart(figm2, use_container_width=True, key="gorig_mes")
                 else:
@@ -764,6 +773,7 @@ if page == "Meu Dinheiro":
                 st.dataframe(
                     gorig_m.assign(Total_fmt=gorig_m["Total"].map(fmt_brl)),
                     use_container_width=True,
+                    height=300,
                     hide_index=True,
                 )
 
@@ -784,6 +794,7 @@ if page == "Meu Dinheiro":
                     editor = st.data_editor(
                         df_orc,
                         key="orcamento_editor",
+                        height=300,
                         hide_index=True,
                         column_config={
                             "Categoria": st.column_config.TextColumn("Categoria", disabled=True, width="medium"),
@@ -855,6 +866,7 @@ elif page == "Radar":
                             xaxis_title="",
                             yaxis_title="Total (R$)",
                             bargap=0.2,
+                            height=320,
                             showlegend=False,
                             margin=dict(l=10, r=10, t=40, b=0),
                         )
@@ -895,6 +907,7 @@ elif page == "Radar":
                         fig_pie.update_traces(textposition="inside", texttemplate="%{percent:.1%}")
                         fig_pie.update_layout(
                             showlegend=True,
+                            height=320,
                             legend=dict(orientation="h", y=-0.2, x=0.25),
                             margin=dict(l=0, r=0, t=20, b=40),
                         )
@@ -954,6 +967,7 @@ elif page == "Despesas":
                 df_tx,
                 num_rows="dynamic",
                 use_container_width=True,
+                height=300,
                 hide_index=True,
                 column_config={
                     "id": st.column_config.NumberColumn("id", disabled=True),
@@ -1113,7 +1127,7 @@ elif page == "Importar Extratos":
     with f2:
         periodo_f = st.text_input("Filtrar por período (ex.: 202510 ou out/25)", value="")
     df_lotes = list_statements(origem_f, periodo_f)
-    st.dataframe(df_lotes, use_container_width=True, hide_index=True)
+    st.dataframe(df_lotes, use_container_width=True, height=300, hide_index=True)
 
     col_del1, col_del2, col_del3 = st.columns([1,1,2])
     with col_del1:
@@ -1127,7 +1141,7 @@ elif page == "Importar Extratos":
             db.commit()
             st.success(f"Excluídos {n} lançãoamentos e o lote {int(lote_id)}.")
             df_lotes = list_statements(origem_f, periodo_f)
-    st.dataframe(df_lotes, use_container_width=True, hide_index=True)
+    st.dataframe(df_lotes, use_container_width=True, height=300, hide_index=True)
 
     format_cards = [
         {
@@ -1209,13 +1223,16 @@ elif page == "Categorias":
     if "cat_view" not in st.session_state:
         st.session_state.cat_view = "Categorias"
 
-    b1, b2, info = st.columns([1,1,2])
+    b1, b2, b3, info = st.columns([1,1,1,2])
     with b1:
         if st.button("Categorias", use_container_width=True):
             st.session_state.cat_view = "Categorias"
     with b2:
         if st.button("Categorias Inteligentes", use_container_width=True):
             st.session_state.cat_view = "Categorias Inteligentes"
+    with b3:
+        if st.button("Radar Inteligente", use_container_width=True):
+            st.session_state.cat_view = "Radar Inteligente"
     with info:
         st.caption(f"Visão atual: **{st.session_state.cat_view}**")
 
@@ -1238,6 +1255,7 @@ elif page == "Categorias":
         df_edit = st.data_editor(
             df_c,
             use_container_width=True,
+            height=300,
             hide_index=True,
             column_config={
                 "id": st.column_config.NumberColumn("ID", disabled=True),
@@ -1280,13 +1298,13 @@ elif page == "Categorias":
                 st.warning("Informe um ID válido.")
 
     # ---------- Visão: Categorias Inteligentes ----------
-    else:
+    elif st.session_state.cat_view == "Categorias Inteligentes":
         from engine.storage import SmartCategoryRule
         rules = db.session.query(SmartCategoryRule).order_by(SmartCategoryRule.id.desc()).all()
         df_r = pd.DataFrame([{"id": r.id, "keyword": r.keyword, "category": r.category, "active": r.active} for r in rules])
 
         st.subheader("Regras cadastradas")
-        st.dataframe(df_r, use_container_width=True, hide_index=True)
+        st.dataframe(df_r, use_container_width=True, height=300, hide_index=True)
 
         st.subheader("Adicionar regra")
         kcol, ccol = st.columns(2)
@@ -1321,6 +1339,64 @@ elif page == "Categorias":
                 st.warning("Informe um ID válido.")
 
         st.caption("As regras são aplicadas automaticamente logo após cada importação.")
+
+    # ---------- Visão: Radar Inteligente ----------
+    elif st.session_state.cat_view == "Radar Inteligente":
+        from engine.storage import RadarKeyword
+        from sqlalchemy import update as sa_update
+
+        radar_kws = db.session.query(RadarKeyword).order_by(RadarKeyword.id.desc()).all()
+        df_rk = pd.DataFrame([{
+            "id": r.id,
+            "keyword": r.keyword,
+            "label": r.label or "",
+            "active": r.active,
+        } for r in radar_kws])
+
+        st.subheader("Keywords cadastradas")
+        st.dataframe(df_rk, use_container_width=True, height=300, hide_index=True)
+
+        st.subheader("Adicionar keyword")
+        rk_col1, rk_col2 = st.columns(2)
+        with rk_col1:
+            rk_kw = st.text_input("Palavra-chave (ex.: SHELL, POSTO)")
+        with rk_col2:
+            rk_label = st.text_input("Label amigável (opcional, ex.: Gasolina)")
+        if st.button("Adicionar keyword"):
+            if rk_kw.strip():
+                db.session.add(RadarKeyword(keyword=rk_kw.strip(), label=rk_label.strip() or None, active=1))
+                db.commit()
+                st.success("Keyword adicionada.")
+                st.rerun()
+            else:
+                st.warning("Informe a palavra-chave.")
+
+        st.subheader("Ativar/Desativar")
+        rk_id = st.number_input("ID da keyword", min_value=0, step=1, value=0, key="rk_toggle_id")
+        rk_ativo = st.checkbox("Ativa", value=True, key="rk_toggle_active")
+        if st.button("Atualizar status", key="rk_toggle_btn"):
+            if rk_id > 0:
+                db.session.execute(
+                    sa_update(RadarKeyword)
+                    .where(RadarKeyword.id == int(rk_id))
+                    .values(active=(1 if rk_ativo else 0))
+                )
+                db.commit()
+                st.success("Status atualizado.")
+                st.rerun()
+            else:
+                st.warning("Informe um ID válido.")
+
+        st.subheader("Excluir")
+        rk_del_id = st.number_input("ID para excluir", min_value=0, step=1, value=0, key="rk_del_id")
+        if st.button("Excluir keyword", key="rk_del_btn"):
+            if rk_del_id > 0:
+                db.session.query(RadarKeyword).filter(RadarKeyword.id == int(rk_del_id)).delete()
+                db.commit()
+                st.success(f"Keyword {int(rk_del_id)} excluída.")
+                st.rerun()
+            else:
+                st.warning("Informe um ID válido.")
 
 
 

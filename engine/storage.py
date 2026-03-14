@@ -49,6 +49,14 @@ class SmartCategoryRule(Base):
     active       = Column(Integer, default=1)
     created_at   = Column(DateTime, default=datetime.utcnow)
 
+class RadarKeyword(Base):
+    __tablename__ = "radar_keywords"
+    id         = Column(Integer, primary_key=True)
+    keyword    = Column(String(200), nullable=False)
+    label      = Column(String(200), nullable=True)
+    active     = Column(Integer, default=1)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class _DB:
     def __init__(self, url):
         self.engine = create_engine(url, future=True)
@@ -85,6 +93,8 @@ def _ensure_cols():
                 con.execute(text("ALTER TABLE categories ADD COLUMN budget_meta FLOAT"))
         if not insp.has_table("smart_category_rules"):
             SmartCategoryRule.__table__.create(db.engine)
+        if not insp.has_table("radar_keywords"):
+            RadarKeyword.__table__.create(db.engine)
         con.execute(text("CREATE INDEX IF NOT EXISTS ix_transactions_period ON transactions (period_yyyymm)"))
         con.execute(text("CREATE INDEX IF NOT EXISTS ix_transactions_origin ON transactions (origin_label)"))
         con.execute(text("CREATE INDEX IF NOT EXISTS ix_statements_period ON statements (period_yyyymm)"))
