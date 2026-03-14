@@ -58,22 +58,24 @@ def load_version() -> str:
 
 APP_VERSION = load_version()
 
-def card_kpi(label: str, valor: float, col, meta: float | None = None):
-    def _fmt_short(value: float) -> str:
-        try:
-            val = float(value)
-        except Exception:
-            return str(value)
-        sign = "-" if val < 0 else ""
-        val = abs(val)
-        if val >= 1_000_000:
-            return f"{sign}{val/1_000_000:.1f}M"
-        if val >= 1_000:
-            return f"{sign}{val/1_000:.1f}k"
-        return f"{sign}{val:.0f}"
+def _fmt_short(value: float) -> str:
+    try:
+        val = float(value)
+    except Exception:
+        return str(value)
+    sign = "-" if val < 0 else ""
+    val = abs(val)
+    if val >= 1_000_000:
+        return f"{sign}{val/1_000_000:.1f}M"
+    if val >= 1_000:
+        return f"{sign}{val/1_000:.1f}k"
+    return f"{sign}{val:.0f}"
 
+def card_kpi(label: str, valor: float, col, meta: float | None = None, detalhe: str | None = None):
     detail_html = "<div class='kpi-detail kpi-detail--empty'>&nbsp;</div>"
-    if meta is not None:
+    if detalhe is not None:
+        detail_html = detalhe
+    elif meta is not None:
         delta = valor - meta
         is_good = valor >= meta
         status = "Bom" if is_good else "Atenção"
@@ -164,7 +166,7 @@ def compute_budget_data(origin_filter: str | None, year: int | None = None):
                     month_count = len(valid)
                     media = float(sum(valid) / len(valid))
         month_counts[cat.name] = month_count
-        rows.append({"Categoria": cat.name, "Media": media, "Meta": cat.budget_meta, "Meses": month_count})
+        rows.append({"Categoria": cat.name, "Media": media, "Meta": cat.budget_meta})
         meta_map[cat.name] = cat.budget_meta if cat.budget_meta is not None else media
     return rows, meta_map, tabela, cols_mes, categorias, month_counts
 
@@ -383,6 +385,16 @@ if page == "Meu Dinheiro":
             .view-toggle div[data-st-key="btn_mensal"] button:hover {
                 background: #ffc48e;
             }
+            .alert-badge-green {
+                display: inline-block;
+                background: #e8fff4;
+                color: #1b7f5d;
+                font-weight: 600;
+                padding: 4px 12px;
+                border-radius: 999px;
+                border: 1px solid #b4f0d3;
+                margin-bottom: 0.5rem;
+            }
             .alert-badge {
                 display: inline-block;
                 background: #ffe8e5;
@@ -466,33 +478,48 @@ if page == "Meu Dinheiro":
             (0.0, 0.0)
         )
 
-        _, budget_meta_map_year, _, cols_mes_ano, categorias_ano, annual_month_counts = compute_budget_data(origin_filter, year=filtro_ano)
-        months_total_ano = len(cols_mes_ano) or 0
-        meta_total_ano = 0.0
-        for cat in categorias_ano:
-            monthly_meta = budget_meta_map_year.get(cat.name, 0.0) or 0.0
-            month_count = annual_month_counts.get(cat.name, months_total_ano) or months_total_ano
-            meta_total_ano += monthly_meta * month_count
+        _, budget_meta_map_year, _, cols_mes_ano, categorias_ano, _ = compute_budget_data(origin_filter, year=filtro_ano)
+        meses_importados = len(cols_mes_ano) or 0
+        meta_total_ano = sum((budget_meta_map_year.get(cat.name, 0.0) or 0.0) * 12 for cat in categorias_ano)
+        meta_proporcional = (meta_total_ano / 12) * meses_importados if meta_total_ano else 0.0
+        no_ritmo = abs(tot_desp_ano) <= abs(meta_proporcional)
 
         with st.container():
             st.markdown('<div class="annual-metrics">', unsafe_allow_html=True)
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-            card_kpi("Despesas", tot_desp_ano, kpi1, meta_total_ano)
+            if meta_total_ano:
+                _status_ritmo = "No ritmo" if no_ritmo else "Acima do ritmo"
+                _cor_ritmo = "#1b7f5d" if no_ritmo else "#b3261e"
+                _detalhe_desp = (
+                    f"<div class='kpi-detail' style='color:{_cor_ritmo};'>"
+                    f"Meta anual {_fmt_short(meta_total_ano)} · Ritmo: {_status_ritmo}"
+                    "</div>"
+                )
+                card_kpi("Despesas", tot_desp_ano, kpi1, detalhe=_detalhe_desp)
+            else:
+                card_kpi("Despesas", tot_desp_ano, kpi1)
             card_kpi("Receitas", tot_rec_ano, kpi2)
             card_kpi("Saldo", tot_rec_ano + tot_desp_ano, kpi3)
             label_periodo = selected_period_label if selected_period else "Período"
             card_kpi("Saldo (período)", periodo_rec + periodo_desp, kpi4)
             st.markdown('</div>', unsafe_allow_html=True)
-        if meta_total_ano and tot_desp_ano > meta_total_ano * 1.05:
-            excedente = tot_desp_ano - meta_total_ano
-            st.markdown(
-                f"<div class='alert-badge'>Atenção: despesas anuais acima da meta em {fmt_brl(excedente)}</div>",
-                unsafe_allow_html=True,
-            )
+        if meta_total_ano:
+            _diferenca = abs(abs(tot_desp_ano) - abs(meta_proporcional))
+            _meses_label = f"{meses_importados} {'mês' if meses_importados == 1 else 'meses'}"
+            if not no_ritmo:
+                st.markdown(
+                    f"<div class='alert-badge'>Atenção: despesas {fmt_brl(_diferenca)} acima do ritmo esperado "
+                    f"para o período (meta {_meses_label}: {fmt_brl(abs(meta_proporcional))})</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    f"<div class='alert-badge-green'>No ritmo: despesas {fmt_brl(_diferenca)} abaixo da meta do período</div>",
+                    unsafe_allow_html=True,
+                )
 
         col_cat, col_origin = st.columns((2, 1), gap="large")
-        _, annual_meta_map, _, cols_mes_ano, _, annual_month_counts = compute_budget_data(origin_filter, year=filtro_ano)
-        months_total_ano = len(cols_mes_ano) or 0
+        _, annual_meta_map, _, _, _, _ = compute_budget_data(origin_filter, year=filtro_ano)
         with col_cat:
             gcat = df_despesas_por_categoria(
                 year=filtro_ano,
@@ -511,8 +538,7 @@ if page == "Meu Dinheiro":
                 meta_line = []
                 for cat in categories_order:
                     monthly_meta = annual_meta_map.get(cat, 0.0) or 0.0
-                    month_count = annual_month_counts.get(cat, months_total_ano) or months_total_ano
-                    meta_total = monthly_meta * month_count
+                    meta_total = monthly_meta * 12
                     meta_totals[cat] = meta_total
                     meta_line.append(-abs(meta_total))
                 fig = go.Figure()
