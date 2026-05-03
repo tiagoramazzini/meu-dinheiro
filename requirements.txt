@@ -9,3 +9,5 @@ pdfplumber>=0.11.0
 pypdf>=4.3.1
 PyPDF2>=3.0.0
 html5lib>=1.1
+yfinance>=0.2.37
+requests>=2.31.0

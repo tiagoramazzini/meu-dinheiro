@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+﻿FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -21,6 +21,8 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY VERSION /app/VERSION
 COPY app.py /app/app.py
 COPY engine /app/engine
+COPY modulos /app/modulos
+COPY static /app/static
 COPY python /app/python
 
 # Pastas de dados/backup

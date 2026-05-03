@@ -33,6 +33,8 @@ os.makedirs(FIN_BACKUP_DIR, exist_ok=True)
 os.makedirs(os.path.join(FIN_DATA_DIR, "tmp"), exist_ok=True)
 
 init_db()
+from engine.portfolio_storage import init_db as portfolio_init_db
+portfolio_init_db()
 st.set_page_config(page_title="Meu Financeiro", layout="wide")
 
 # ===== CONSTS/UTIL =====
@@ -219,7 +221,7 @@ with st.sidebar:
     st.title("Meu Dinheiro")
     page = st.radio(
         "Navegação",
-        ["Meu Dinheiro", "Radar", "Despesas", "Categorias", "Importar Extratos"],
+        ["Meu Dinheiro", "Radar", "Despesas", "Categorias", "Importar Extratos", "Portfólio"],
         index=0
     )
     st.caption(f"v{APP_VERSION} - DEV")
@@ -290,6 +292,7 @@ if page == "Meu Dinheiro":
                 color: #5c2d1a !important;
                 border-bottom: 1px solid #ffd8b5 !important;
             }
+
             .stDataFrame [role="gridcell"],
             div[data-testid="stDataFrame"] [role="gridcell"] {
                 border-bottom: 1px solid #ffe5cc !important;
@@ -439,6 +442,20 @@ if page == "Meu Dinheiro":
         """,
         unsafe_allow_html=True,
     )
+    st.markdown("""
+<script>
+function fixTableHeaders() {
+    document.querySelectorAll('div[data-testid="stDataFrame"] div[class*="gdg-s"]').forEach(el => {
+        el.style.setProperty('--gdg-bg-header', '#fff3e6', 'important');
+        el.style.setProperty('--gdg-bg-header-hovered', '#ffe8cc', 'important');
+        el.style.setProperty('--gdg-text-header', '#5c2d1a', 'important');
+    });
+}
+const observer = new MutationObserver(fixTableHeaders);
+observer.observe(document.body, {childList: true, subtree: true});
+fixTableHeaders();
+</script>
+""", unsafe_allow_html=True)
 
     VIEW_ANUAL = "annual"
     VIEW_MENSAL = "monthly"
@@ -1439,8 +1456,8 @@ elif page == "Categorias":
             else:
                 st.warning("Informe um ID válido.")
 
-
-
-
+elif page == "Portfólio":
+    from modulos.portfolio_page import main as render
+    render()
 
 

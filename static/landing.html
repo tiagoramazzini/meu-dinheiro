@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meu Dinheiro — Controle Financeiro Local</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0e1117;
+      --bg2:        #131720;
+      --surface:    #171e2e;
+      --surface2:   #1d2640;
+      --border:     #252f47;
+      --border2:    #2e3a56;
+      --text:       #e8edf5;
+      --text-dim:   #8b97b3;
+      --text-muted: #5a6782;
+
+      --teal:       #2dd4bf;
+      --teal-dim:   rgba(45,212,191,0.15);
+      --teal-glow:  rgba(45,212,191,0.08);
+      --blue:       #60a5fa;
+      --blue-dim:   rgba(96,165,250,0.15);
+      --purple:     #a78bfa;
+      --purple-dim: rgba(167,139,250,0.15);
+      --orange:     #fb923c;
+      --orange-dim: rgba(251,146,60,0.15);
+      --pink:       #f472b6;
+      --pink-dim:   rgba(244,114,182,0.15);
+      --yellow:     #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.15);
+
+      --radius-sm: 8px;
+      --radius:    12px;
+      --radius-lg: 16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ─── SCROLLBAR ─────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ─── NAV ───────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2.5rem;
+      background: rgba(14,17,23,0.8);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: var(--teal);
+      letter-spacing: -0.01em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: var(--teal);
+      color: #0e1117;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .nav-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .nav-hamburger { display: none; background: none; border: none; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; padding: 4px; }
+
+    /* ─── HERO ──────────────────────────────────── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 7rem 2.5rem 5.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse at 50% 30%, rgba(45,212,191,0.1) 0%, rgba(96,165,250,0.06) 40%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: var(--teal-dim);
+      border: 1px solid rgba(45,212,191,0.25);
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      max-width: 780px;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .accent { color: var(--teal); }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin-bottom: 3rem;
+      line-height: 1.7;
+    }
+
+    /* Module button grid */
+    .hero-modules {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      max-width: 680px;
+      margin-bottom: 3.5rem;
+    }
+
+    .hero-mod-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid;
+      transition: transform 0.15s, opacity 0.15s;
+      cursor: default;
+    }
+    .hero-mod-btn:hover { transform: translateY(-2px); opacity: 0.85; }
+    .hero-mod-btn i { font-size: 0.75rem; }
+
+    .mod-teal   { color: var(--teal);   border-color: rgba(45,212,191,0.3);  background: var(--teal-dim); }
+    .mod-blue   { color: var(--blue);   border-color: rgba(96,165,250,0.3);  background: var(--blue-dim); }
+    .mod-purple { color: var(--purple); border-color: rgba(167,139,250,0.3); background: var(--purple-dim); }
+    .mod-orange { color: var(--orange); border-color: rgba(251,146,60,0.3);  background: var(--orange-dim); }
+    .mod-pink   { color: var(--pink);   border-color: rgba(244,114,182,0.3); background: var(--pink-dim); }
+
+    /* Trust badges */
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem 1.25rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.73rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .badge i { color: var(--teal); font-size: 0.65rem; }
+
+    /* ─── DIVIDER ───────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* ─── SECTIONS ──────────────────────────────── */
+    .section {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 5.5rem 2.5rem;
+    }
+
+    .section-eyebrow {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.7rem;
+      line-height: 1.2;
+    }
+
+    .section-sub {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      max-width: 500px;
+      margin-bottom: 3.5rem;
+      line-height: 1.65;
+    }
+
+    /* ─── MODULE CARDS ──────────────────────────── */
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .mod-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.6rem;
+      transition: border-color 0.2s, transform 0.2s, background 0.2s;
+      position: relative;
+    }
+    .mod-card:hover {
+      transform: translateY(-3px);
+      background: var(--surface2);
+    }
+    .mod-card.c-teal:hover   { border-color: rgba(45,212,191,0.5); }
+    .mod-card.c-blue:hover   { border-color: rgba(96,165,250,0.5); }
+    .mod-card.c-purple:hover { border-color: rgba(167,139,250,0.5); }
+    .mod-card.c-orange:hover { border-color: rgba(251,146,60,0.5); }
+    .mod-card.c-pink:hover   { border-color: rgba(244,114,182,0.5); }
+    .mod-card.c-yellow:hover { border-color: rgba(251,191,36,0.5); }
+
+    .mod-card-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      margin-bottom: 1.1rem;
+    }
+    .bg-teal   { background: var(--teal-dim);   color: var(--teal); }
+    .bg-blue   { background: var(--blue-dim);   color: var(--blue); }
+    .bg-purple { background: var(--purple-dim); color: var(--purple); }
+    .bg-orange { background: var(--orange-dim); color: var(--orange); }
+    .bg-pink   { background: var(--pink-dim);   color: var(--pink); }
+    .bg-yellow { background: var(--yellow-dim); color: var(--yellow); }
+
+    .mod-card-live {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: rgba(45,212,191,0.12);
+      color: var(--teal);
+      border: 1px solid rgba(45,212,191,0.3);
+    }
+    .mod-card-live::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    .mod-card-soon {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid var(--border2);
+    }
+
+    .mod-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .mod-card p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.55;
+    }
+
+    /* ─── TRANSPARENCY ──────────────────────────── */
+    .trans-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .trans-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.75rem;
+    }
+
+    .trans-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .trans-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .trans-card p {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .trans-card ul {
+      list-style: none;
+      margin-top: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .trans-card ul li {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .trans-card ul li i {
+      font-size: 0.65rem;
+      min-width: 12px;
+    }
+
+    /* ─── FAQ ───────────────────────────────────── */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 760px;
+    }
+
+    .faq-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item:has(.faq-body:not([hidden])) { border-color: var(--border2); }
+
+    .faq-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .faq-trigger:hover { background: var(--surface2); }
+
+    .faq-chevron {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      transition: transform 0.25s;
+      flex-shrink: 0;
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+    .faq-body {
+      padding: 0 1.4rem 1.2rem;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+    .faq-body[hidden] { display: none; }
+
+    /* ─── CTA BAND ──────────────────────────────── */
+    .cta-band {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--bg2) 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 5rem 2.5rem;
+      text-align: center;
+    }
+
+    .cta-band h2 {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.75rem;
+    }
+    .cta-band h2 span { color: var(--teal); }
+
+    .cta-band p {
+      font-size: 0.92rem;
+      color: var(--text-dim);
+      margin-bottom: 2rem;
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: var(--teal);
+      color: #0e1117;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 14px 30px;
+      border-radius: 10px;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-cta:hover { opacity: 0.88; transform: translateY(-2px); }
+
+    /* ─── FOOTER ────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2.5rem 2rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+    footer span { color: var(--text-dim); }
+
+    /* ─── RESPONSIVE ────────────────────────────── */
+    @media (max-width: 900px) {
+      .modules-grid { grid-template-columns: repeat(2, 1fr); }
+      .trans-grid   { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 0 1.25rem; }
+      .nav-links { display: none; }
+      .nav-hamburger { display: block; }
+      .hero { padding: 5rem 1.25rem 4rem; }
+      .section { padding: 4rem 1.25rem; }
+      .modules-grid { grid-template-columns: 1fr; }
+      .cta-band { padding: 4rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <nav>
+    <a class="nav-logo" href="#">&gt;_ Meu Dinheiro</a>
+    <ul class="nav-links">
+      <li><a href="#sobre">Sobre</a></li>
+      <li><a href="#modulos">Módulos</a></li>
+      <li><a href="#privacidade">Privacidade</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <button class="nav-hamburger" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    <a class="nav-btn" href="/app/">Acessar o App <i class="fa-solid fa-arrow-right"></i></a>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <div class="hero" id="sobre">
+    <div class="hero-glow"></div>
+
+    <div class="hero-eyebrow">
+      <i class="fa-solid fa-shield-halved"></i>
+      Controle financeiro 100% local
+    </div>
+
+    <h1>
+      Seu patrimônio,<br>
+      <span class="accent">sob seu controle.</span>
+    </h1>
+
+    <p class="hero-sub">
+      Dashboard pessoal para finanças do dia a dia, investimentos e planejamento. Tudo rodando na sua máquina — sem cloud, sem assinatura, sem ceder seus dados.
+    </p>
+
+    <div class="hero-modules">
+      <span class="hero-mod-btn mod-teal"><i class="fa-solid fa-chart-line"></i> Portfólio</span>
+      <span class="hero-mod-btn mod-blue"><i class="fa-solid fa-bullseye"></i> Metas</span>
+      <span class="hero-mod-btn mod-purple"><i class="fa-solid fa-calculator"></i> Simulações</span>
+      <span class="hero-mod-btn mod-orange"><i class="fa-solid fa-building-columns"></i> Patrimônio</span>
+      <span class="hero-mod-btn mod-pink"><i class="fa-solid fa-file-invoice-dollar"></i> IRPF</span>
+    </div>
+
+    <div class="hero-badges">
+      <span class="badge"><i class="fa-solid fa-circle-check"></i> 100% Local</span>
+      <span class="badge"><i class="fa-solid fa-circle-check"></i> SQLite Embutido</span>
+      <span class="badge"><i class="fa-solid fa-circle-check"></i> Código Aberto</span>
+      <span class="badge"><i class="fa-solid fa-circle-check"></i> Offline-First</span>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── MÓDULOS ── -->
+  <section class="section" id="modulos">
+    <div class="section-eyebrow">Módulos</div>
+    <h2 class="section-title">Tudo em um só lugar</h2>
+    <p class="section-sub">Módulos integrados cobrindo todo o ciclo financeiro pessoal, do controle de gastos ao planejamento tributário.</p>
+
+    <div class="modules-grid">
+
+      <!-- Meu Dinheiro -->
+      <div class="mod-card c-teal">
+        <div class="mod-card-live">Disponível</div>
+        <div class="mod-card-icon bg-teal"><i class="fa-solid fa-wallet"></i></div>
+        <h3>Meu Dinheiro</h3>
+        <p>Controle de gastos, orçamentos mensais e categorização inteligente. Importe extratos de múltiplas contas e tenha visão consolidada com alertas de ritmo.</p>
+      </div>
+
+      <!-- Portfólio -->
+      <div class="mod-card c-blue">
+        <div class="mod-card-live">Disponível</div>
+        <div class="mod-card-icon bg-blue"><i class="fa-solid fa-chart-line"></i></div>
+        <h3>Portfólio de Investimentos</h3>
+        <p>Carteira em tempo real com cotações automáticas. Apuração de IR por ativo, registro de dividendos e rebalanceamento por percentual-alvo.</p>
+      </div>
+
+      <!-- Metas -->
+      <div class="mod-card c-purple">
+        <div class="mod-card-live">Disponível</div>
+        <div class="mod-card-icon bg-purple"><i class="fa-solid fa-bullseye"></i></div>
+        <h3>Metas Financeiras</h3>
+        <p>Defina objetivos com prazo e valor-alvo. Acompanhe o progresso com projeções automáticas baseadas no seu ritmo de aportes.</p>
+      </div>
+
+      <!-- Simulações -->
+      <div class="mod-card c-orange">
+        <div class="mod-card-live">Disponível</div>
+        <div class="mod-card-icon bg-orange"><i class="fa-solid fa-calculator"></i></div>
+        <h3>Simulações Financeiras</h3>
+        <p>Juros compostos, aportes periódicos, comparação de cenários e projeção de aposentadoria. Visualize o impacto de cada decisão.</p>
+      </div>
+
+      <!-- Patrimônio -->
+      <div class="mod-card c-pink">
+        <div class="mod-card-live">Disponível</div>
+        <div class="mod-card-icon bg-pink"><i class="fa-solid fa-building-columns"></i></div>
+        <h3>Patrimônio Líquido</h3>
+        <p>Visão consolidada de ativos e passivos: imóveis, veículos, dívidas e evolução do patrimônio ao longo do tempo.</p>
+      </div>
+
+      <!-- IRPF -->
+      <div class="mod-card c-yellow">
+        <div class="mod-card-live">Disponível</div>
+        <div class="mod-card-icon bg-yellow"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+        <h3>Relatório Anual &amp; IRPF</h3>
+        <p>Resumo anual de rendimentos, bens e direitos. Auxílio à declaração com relatórios prontos para o preenchimento do IRPF.</p>
+      </div>
+
+      <!-- Em breve -->
+      <div class="mod-card c-yellow" style="opacity:0.65;">
+        <div class="mod-card-soon">Em breve</div>
+        <div class="mod-card-icon bg-yellow"><i class="fa-solid fa-globe"></i></div>
+        <h3>Câmbio &amp; Internacional</h3>
+        <p>Acompanhamento de ativos internacionais, conversão de moedas e controle de exposição cambial na carteira.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ── TRANSPARÊNCIA ── -->
+  <section class="section" id="privacidade">
+    <div class="section-eyebrow">Transparência</div>
+    <h2 class="section-title">Por que self-hosted?</h2>
+    <p class="section-sub">Seus dados financeiros são os mais sensíveis que existem. Eles não pertencem a nenhum servidor além do seu.</p>
+
+    <div class="trans-grid">
+
+      <div class="trans-card">
+        <div class="trans-icon bg-teal"><i class="fa-solid fa-hard-drive"></i></div>
+        <h3>Segurança Física</h3>
+        <p>Seus dados ficam em um arquivo SQLite no seu próprio disco. Nenhuma credencial, extrato ou posição trafega pela internet.</p>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:var(--teal)"></i> Sem autenticação em nuvem</li>
+          <li><i class="fa-solid fa-check" style="color:var(--teal)"></i> Sem sync automático externo</li>
+          <li><i class="fa-solid fa-check" style="color:var(--teal)"></i> Backup sob seu controle</li>
+        </ul>
+      </div>
+
+      <div class="trans-card">
+        <div class="trans-icon bg-blue"><i class="fa-solid fa-bolt"></i></div>
+        <h3>Performance Local</h3>
+        <p>Sem latência de servidor remoto. Toda a lógica roda localmente em milissegundos. Cotações e dados externos são opcionais e cacheados.</p>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:var(--blue)"></i> Funciona 100% offline</li>
+          <li><i class="fa-solid fa-check" style="color:var(--blue)"></i> Cache local de cotações</li>
+          <li><i class="fa-solid fa-check" style="color:var(--blue)"></i> Sem dependência de API paga</li>
+        </ul>
+      </div>
+
+      <div class="trans-card">
+        <div class="trans-icon bg-purple"><i class="fa-brands fa-github"></i></div>
+        <h3>Open Source</h3>
+        <p>Código auditável linha a linha. Sem telemetria, sem analytics, sem pixel de rastreamento. Você vê exatamente o que roda na sua máquina.</p>
+        <ul>
+          <li><i class="fa-solid fa-check" style="color:var(--purple)"></i> Zero telemetria</li>
+          <li><i class="fa-solid fa-check" style="color:var(--purple)"></i> Sem dependências proprietárias</li>
+          <li><i class="fa-solid fa-check" style="color:var(--purple)"></i> Modificável e extensível</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ── FAQ ── -->
+  <section class="section" id="faq">
+    <div class="section-eyebrow">FAQ</div>
+    <h2 class="section-title">Perguntas frequentes</h2>
+    <p class="section-sub">Dúvidas comuns sobre funcionamento, privacidade e instalação.</p>
+
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-trigger" onclick="toggleFaq(this)">
+          Como fazer backup dos meus dados?
+          <i class="fa-solid fa-chevron-down faq-chevron"></i>
+        </button>
+        <div class="faq-body" hidden>
+          Todos os dados ficam em arquivos SQLite dentro do diretório configurado em <code>FIN_DATA_DIR</code> (padrão: <code>_local_data/</code>). Basta copiar essa pasta para outro local ou nuvem de sua preferência. Não existe lock-in — o formato SQLite é aberto e pode ser lido por qualquer ferramenta compatível.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-trigger" onclick="toggleFaq(this)">
+          O app se conecta a algum banco ou serviço externo?
+          <i class="fa-solid fa-chevron-down faq-chevron"></i>
+        </button>
+        <div class="faq-body" hidden>
+          Não há conexão com bancos ou corretoras. As únicas chamadas externas são opcionais: cotações de ações via <strong>yfinance</strong> e <strong>brapi.dev</strong>, e taxa CDI via <strong>API do Banco Central</strong>. Todas são cacheadas localmente. O app funciona normalmente offline — apenas cotações em tempo real ficam indisponíveis.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-trigger" onclick="toggleFaq(this)">
+          As cotações são atualizadas automaticamente?
+          <i class="fa-solid fa-chevron-down faq-chevron"></i>
+        </button>
+        <div class="faq-body" hidden>
+          Sim. Ao abrir o módulo de Portfólio, as cotações são buscadas automaticamente e armazenadas em cache por 5 minutos. Dados fundamentalistas e CDI têm cache de 1 hora. Nenhuma chave de API é necessária para uso básico — o token da brapi é opcional e melhora os limites de requisição.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-trigger" onclick="toggleFaq(this)">
+          Meus dados financeiros são enviados para algum servidor?
+          <i class="fa-solid fa-chevron-down faq-chevron"></i>
+        </button>
+        <div class="faq-body" hidden>
+          Nunca. O app não tem telemetria, não registra eventos de uso e não transmite nenhuma informação sobre sua carteira, extratos ou metas para servidores externos. As únicas requisições de rede são as consultas de cotações públicas descritas acima — e mesmo essas são opcionais.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-trigger" onclick="toggleFaq(this)">
+          Como instalar e rodar localmente?
+          <i class="fa-solid fa-chevron-down faq-chevron"></i>
+        </button>
+        <div class="faq-body" hidden>
+          A forma mais simples é via <strong>Docker Compose</strong>: clone o repositório, rode <code>docker compose up</code> e acesse <a href="/app/" style="color:var(--teal)">/app/</a>. Alternativamente, instale as dependências com <code>pip install -r requirements.txt</code> e execute <code>streamlit run app.py</code>. O banco de dados é criado automaticamente na primeira execução.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ── CTA BAND ── -->
+  <div class="cta-band">
+    <h2>Pronto para assumir o <span>controle</span>?</h2>
+    <p>O app já está rodando. É só acessar.</p>
+    <a class="btn-cta" href="/app/">
+      <i class="fa-solid fa-rocket"></i>
+      Acessar o App
+    </a>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <span>&gt;_ Meu Dinheiro</span> &nbsp;·&nbsp; Self-hosted &nbsp;·&nbsp; Dados locais &nbsp;·&nbsp; Sem cloud<br />
+    <span style="opacity:0.45; font-size:0.68rem; margin-top:0.4rem; display:inline-block;">Nenhuma informação é transmitida externamente.</span>
+  </footer>
+
+  <script>
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const body = item.querySelector('.faq-body');
+      const isOpen = !body.hidden;
+      // close all
+      document.querySelectorAll('.faq-item').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-body').hidden = true;
+      });
+      // open clicked if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+        body.hidden = false;
+      }
+    }
+  </script>
+
+</body>
+</html>
